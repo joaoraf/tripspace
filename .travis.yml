@@ -5,6 +5,9 @@ jdk:
 - oraclejdk8
 notifications:
   email: false
+branches:
+  only:
+    - master
 sudo: false
 cache:
   directories:
