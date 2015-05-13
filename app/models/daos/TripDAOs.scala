@@ -2,68 +2,86 @@ package models.daos
 
 import models._
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 
 
 trait RegionDAO {
-  def find(regionId : RegionId) : Future[Option[Region]]
-      
-  def save(region : Region) : Future[Region]    
+  def find(regionId : RegionId)(implicit ec : ExecutionContext) : Future[Option[Region]]
+  
+  def exists(regionId : RegionId)(implicit ec : ExecutionContext) : Future[Boolean]
+  
+  def save(region : Region)(implicit ec : ExecutionContext) : Future[Region]    
 }
 
 trait PlaceDAO {
-  def find(placeId : PlaceId) : Future[Option[Place]]
+  def find(placeId : PlaceId)(implicit ec : ExecutionContext) : Future[Option[Place]]
+  
+  def exists(placeId : PlaceId)(implicit ec : ExecutionContext) : Future[Boolean]
       
-  def save(place : Place) : Future[Place]
+  def save(place : Place)(implicit ec : ExecutionContext) : Future[Place]
 }
 
 trait TripDAO {
+  def findPublic()(implicit ec : ExecutionContext): Future[Option[Trip]] 
   
-  def find(tripId : TripId): Future[Option[Trip]]
+  def find(tripId : TripId, userId : Option[UserId] = None)(implicit ec : ExecutionContext): Future[Option[Trip]]
   
-  def findByUser(userID: UserId): Future[Map[TripId,Trip]]
+  def exists(tripId : TripId, userId : Option[UserId] = None)(implicit ec : ExecutionContext) : Future[Boolean]
   
-  def save(trip : Trip) : Future[Trip]
+  def findByUser(userID: UserId)(implicit ec : ExecutionContext): Future[Map[TripId,Trip]]
+  
+  def save(trip : Trip, userId : Option[UserId] = None)(implicit ec : ExecutionContext) : Future[Trip]
 
 }
 
-trait TripDayDAO {    
-  def findByTrip(tripId : TripId) : Future[Map[Int,TripDay]]
+/*trait TripDayDAO {    
+  def findByTrip(tripId : TripId)(implicit ec : ExecutionContext) : Future[Map[Int,TripDay]]
   
-  def save(tripId : TripId, dayNum : Int, tripDay : TripDay) : Future[TripDay]
-  def save(tripId : TripId, tripDays : Map[Int,TripDay]) : Future[TripDay]
+  def exists(regionId : TripId, dayNum : Int)(implicit ec : ExecutionContext) : Future[Boolean]
+  
+  def save(tripId : TripId, dayNum : Int, tripDay : TripDay)(implicit ec : ExecutionContext) : Future[TripDay]
+  def save(tripId : TripId, tripDays : Map[Int,TripDay])(implicit ec : ExecutionContext) : Future[TripDay]
 }
 
-trait ActivityDAO {
-  def allActivities(userId : Option[UserId] = None) : Future[Seq[Activity]]
+trait ActivityDAO {  
   
-  def findByTripDay(tripId : TripId, dayNumber : Int) : Future[Option[Activity]]
+  def allActivities(userId : Option[UserId] = None)(implicit ec : ExecutionContext) : Future[Seq[Activity]]
   
-  def save(activity : Activity) : Future[Activity]
+  def findByTripDay(tripId : TripId, dayNumber : Int)(implicit ec : ExecutionContext) : Future[Option[Activity]]
+  
+  def save(activity : Activity)(implicit ec : ExecutionContext) : Future[Activity]
 
 }
 
 trait VisitDAO {
-  def find(visitId : VisitId) : Future[Option[Visit]]
+  def find(visitId : VisitId)(implicit ec : ExecutionContext) : Future[Option[Visit]]
   
-  def findByPlace(placeId : PlaceId) : Future[Seq[Visit]]
+  def exists(visitId : VisitId)(implicit ec : ExecutionContext) : Future[Boolean]
   
-  def findByRegion(regionId : RegionId) : Future[Seq[Visit]]
+  def findByPlace(placeId : PlaceId)(implicit ec : ExecutionContext) : Future[Seq[Visit]]
   
-  def save(visit : Visit) : Future[Visit]
+  def findByRegion(regionId : RegionId)(implicit ec : ExecutionContext) : Future[Seq[Visit]]
+  
+  def save(visit : Visit)(implicit ec : ExecutionContext) : Future[Visit]
 }
 
 trait TransportDAO {
-  def find(transportId : TransportId) : Future[Option[Transport]]
+  def find(transportId : TransportId)(implicit ec : ExecutionContext) : Future[Option[Transport]]
+  
+  def exists(transportId : TransportId)(implicit ec : ExecutionContext) : Future[Boolean]
   
   def findFromToPlace(fromPlaceId : Option[PlaceId] = None,
-                      toPlaceId : Option[PlaceId] = None) : Future[Seq[Transport]]
+                      toPlaceId : Option[PlaceId] = None)
+                    (implicit ec : ExecutionContext) : Future[Seq[Transport]]
   
-  def save(transport : Transport) : Future[Transport]
-}
+  def save(transport : Transport)(implicit ec : ExecutionContext) : Future[Transport]
+}*/
 
 trait TransportModalityDAO {
-  def find(transportModalityId : TransportModalityId) : Future[Option[TransportModality]]
+  def find(transportModalityId : TransportModalityId)(implicit ec : ExecutionContext) : Future[Option[TransportModality]]
   
-  def save(transportModality : TransportModality) : Future[TransportModality]
+  def exists(trasportModalityId : TransportModalityId)(implicit ec : ExecutionContext) : Future[Boolean]
+  
+  def save(transportModality : TransportModality)(implicit ec : ExecutionContext) : Future[TransportModality]
 }

@@ -19,11 +19,14 @@ import com.mohiva.play.silhouette.impl.services._
 import com.mohiva.play.silhouette.impl.util._
 import models.User
 import models.daos._
-import models.daos.slick._
+import models.daos.slickdaos._
 import models.services.{ UserService, UserServiceImpl }
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Play
 import play.api.Play.current
+import com.mohiva.play.silhouette.impl.repositories.DelegableAuthInfoRepository
+import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
+import play.api.i18n.MessagesApi
 
 /**
  * The Guice module which wires all Tripspace dependencies.
@@ -61,13 +64,15 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
   def provideEnvironment(
     userService: UserService,
     authenticatorService: AuthenticatorService[SessionAuthenticator],
-    eventBus: EventBus): Environment[User, SessionAuthenticator] = {
+    eventBus: EventBus,
+    messagesApi : MessagesApi): Environment[User, SessionAuthenticator] = {
 
     Environment[User, SessionAuthenticator](
       userService,
       authenticatorService,
       Seq(),
-      eventBus
+      eventBus,
+      messagesApi
     )
   }
 
@@ -132,13 +137,13 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
    * @return The auth info service instance.
    */
   @Provides
-  def provideAuthInfoService(
+  def provideAuthInfoRepository(
     passwordInfoDAO: DelegableAuthInfoDAO[PasswordInfo],
     oauth1InfoDAO: DelegableAuthInfoDAO[OAuth1Info],
     oauth2InfoDAO: DelegableAuthInfoDAO[OAuth2Info],
-    openIDInfoDAO: DelegableAuthInfoDAO[OpenIDInfo]): AuthInfoService = {
+    openIDInfoDAO: DelegableAuthInfoDAO[OpenIDInfo]): AuthInfoRepository = {
 
-    new DelegableAuthInfoService(passwordInfoDAO, oauth1InfoDAO, oauth2InfoDAO, openIDInfoDAO)
+    new DelegableAuthInfoRepository(passwordInfoDAO, oauth1InfoDAO, oauth2InfoDAO, openIDInfoDAO)
   }
 
   /**
@@ -188,16 +193,16 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
   /**
    * Provides the credentials provider.
    *
-   * @param authInfoService The auth info service implemenetation.
+   * @param AuthInfoRepository The auth info service implemenetation.
    * @param passwordHasher The default password hasher implementation.
    * @return The credentials provider.
    */
   @Provides
   def provideCredentialsProvider(
-    authInfoService: AuthInfoService,
+    AuthInfoRepository: AuthInfoRepository,
     passwordHasher: PasswordHasher): CredentialsProvider = {
 
-    new CredentialsProvider(authInfoService, passwordHasher, Seq(passwordHasher))
+    new CredentialsProvider(AuthInfoRepository, passwordHasher, Seq(passwordHasher))
   }
 
   /**

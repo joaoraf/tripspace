@@ -1,6 +1,7 @@
-package models.daos.slick
+package models.daos.slickdaos
 
-import play.api.db.slick.Config.driver.simple._
+import slick.driver.PostgresDriver.api._
+
 
 trait SilhoutteDBTableDefinitions {
 
@@ -42,8 +43,8 @@ trait SilhoutteDBTableDefinitions {
   )
 
   class UserLoginInfos(tag: Tag) extends Table[DBUserLoginInfo](tag, "userlogininfo") {
-    def userID = column[String]("userID", O.NotNull)
-    def loginInfoId = column[Long]("loginInfoId", O.NotNull)
+    def userID = column[String]("userID")
+    def loginInfoId = column[Long]("loginInfoId")
     def * = (userID, loginInfoId) <> (DBUserLoginInfo.tupled, DBUserLoginInfo.unapply)
   }
 

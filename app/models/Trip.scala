@@ -1,13 +1,13 @@
 package models
 
-import scala.collection.immutable.SortedMap
+import scala.collection.SortedMap
 
 /**
  * The Trip object
  */
 case class Trip(
     tripId : TripId = java.util.UUID.randomUUID(),
-    userId : User,
+    user : User,
     tripName : String = "",
     tripIsPublic : Boolean = false,
     days : SortedMap[Int,TripDay],
@@ -19,7 +19,7 @@ case class Region(
     regionName : String,
     regionDescription : String = "",
     regionThumbnail : Option[String] = None,
-    superRegionIds : Set[RegionId] = Set()
+    superRegions : Set[Region] = Set()
     )
 
     
@@ -31,19 +31,20 @@ case class TripDay (
 sealed trait Activity {
   val lengthHours : Int
 }
-        
-case class Visit(
-    visitId : VisitId,
+
+case class UndefinedActivity(lengthHours : Int) extends Activity
+
+case class Visit(    
     place : Place,
     visitDescription : String,
     lengthHours : Int
     ) extends Activity
 
-case class Transport(
-    transportId : TransportId,
+case class Transport(    
     fromPlace : Place,
     toPlace : Place,
     transportModality : TransportModality,
+    description : String,
     lengthHours : Int
     ) extends Activity    
     
@@ -56,5 +57,5 @@ case class Place(
     placeId : PlaceId,
     placeName : String,
     placeDescription : String,
-    placeRegionIds : Set[RegionId] = Set()
+    regions : Set[Region] = Set()
     )    

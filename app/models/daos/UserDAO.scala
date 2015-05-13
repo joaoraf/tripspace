@@ -1,11 +1,10 @@
 package models.daos
 
 import java.util.UUID
-
 import com.mohiva.play.silhouette.api.LoginInfo
 import models.User
-
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 /**
  * Give access to the user object.
@@ -18,7 +17,7 @@ trait UserDAO {
    * @param loginInfo The login info of the user to find.
    * @return The found user or None if no user for the given login info could be found.
    */
-  def find(loginInfo: LoginInfo): Future[Option[User]]
+  def find(loginInfo: LoginInfo)(implicit ec : ExecutionContext): Future[Option[User]]
 
   /**
    * Finds a user by its user ID.
@@ -26,7 +25,7 @@ trait UserDAO {
    * @param userID The ID of the user to find.
    * @return The found user or None if no user for the given ID could be found.
    */
-  def find(userID: UUID): Future[Option[User]]
+  def find(userID: UUID)(implicit ec : ExecutionContext): Future[Option[User]]
 
   /**
    * Saves a user.
@@ -34,5 +33,5 @@ trait UserDAO {
    * @param user The user to save.
    * @return The saved user.
    */
-  def save(user: User): Future[User]
+  def save(user: User)(implicit ec : ExecutionContext): Future[User]
 }

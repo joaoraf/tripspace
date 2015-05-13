@@ -1,10 +1,8 @@
 package controllers
 
 import javax.inject.Inject
-
 import com.mohiva.play.silhouette.api.{ Environment, LogoutEvent, Silhouette }
 import com.mohiva.play.silhouette.impl.authenticators.SessionAuthenticator
-//import com.mohiva.play.silhouette.impl.providers.SocialProviderRegistry
 import com.mohiva.play.silhouette.api.services._
 import com.mohiva.play.silhouette.api.util._
 import com.mohiva.play.silhouette.api.{ Environment, EventBus }
@@ -22,8 +20,9 @@ import com.mohiva.play.silhouette.impl.services._
 import com.mohiva.play.silhouette.impl.util._
 import forms._
 import models.User
-
 import scala.concurrent.Future
+import play.api.i18n.Messages
+import play.api.i18n.MessagesApi
 
 /**
  * The basic application controller.
@@ -33,6 +32,7 @@ import scala.concurrent.Future
  */
 class ApplicationController @Inject() (
   socialProviderRegistry: SocialProviderRegistry,
+  messagesApi : MessagesApi,
   protected val env: Environment[User, SessionAuthenticator])
   extends Silhouette[User, SessionAuthenticator] {
 
@@ -62,7 +62,7 @@ class ApplicationController @Inject() (
    *
    * @return The result to display.
    */
-  def signUp = UserAwareAction.async { implicit request =>
+  def signUp = UserAwareAction.async { implicit request =>    
     request.identity match {
       case Some(user) => Future.successful(Redirect(routes.ApplicationController.index()))
       case None => Future.successful(Ok(views.html.signUp(SignUpForm.form)))
@@ -75,9 +75,10 @@ class ApplicationController @Inject() (
    * @return The result to display.
    */
   def signOut = SecuredAction.async { implicit request =>
+    val messages = messagesApi.preferred(request)
     val result = Redirect(routes.ApplicationController.index())
-    env.eventBus.publish(LogoutEvent(request.identity, request, request2lang))
-
+    env.eventBus.publish(LogoutEvent(request.identity, request, messages))
+    import request.ec
     env.authenticatorService.discard(request.authenticator, result)
   }
 }

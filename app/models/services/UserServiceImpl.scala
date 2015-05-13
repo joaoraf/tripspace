@@ -2,14 +2,12 @@ package models.services
 
 import java.util.UUID
 import javax.inject.Inject
-
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import models.User
 import models.daos.UserDAO
-import play.api.libs.concurrent.Execution.Implicits._
-
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 /**
  * Handles actions to users.
@@ -24,7 +22,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
    * @param loginInfo The login info to retrieve a user.
    * @return The retrieved user or None if no user could be retrieved for the given login info.
    */
-  def retrieve(loginInfo: LoginInfo): Future[Option[User]] = userDAO.find(loginInfo)
+  def retrieve(loginInfo: LoginInfo)(implicit ec : ExecutionContext): Future[Option[User]] = userDAO.find(loginInfo)
 
   /**
    * Saves a user.
@@ -32,7 +30,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
    * @param user The user to save.
    * @return The saved user.
    */
-  def save(user: User) = userDAO.save(user)
+  def save(user: User)(implicit ec : ExecutionContext) = userDAO.save(user)
 
   /**
    * Saves the social profile for a user.
@@ -42,7 +40,7 @@ class UserServiceImpl @Inject() (userDAO: UserDAO) extends UserService {
    * @param profile The social profile to save.
    * @return The user for whom the profile was saved.
    */
-  def save(profile: CommonSocialProfile) = {
+  def save(profile: CommonSocialProfile)(implicit ec : ExecutionContext) = {
     userDAO.find(profile.loginInfo).flatMap {
       case Some(user) => // Update user with profile
         userDAO.save(user.copy(

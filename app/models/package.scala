@@ -9,8 +9,8 @@ package object models {
   type DayId = UniqueId
   type VisitId = UniqueId
   type TransportId = UniqueId
-  type TransportModalityId = UniqueId
   
+  type TransportModalityId = ResourceId
   type PlaceId = ResourceId
   type RegionId = ResourceId
 }

@@ -1,6 +1,6 @@
-package models.daos.slick
+package models.daos.slickdaos
 
-import play.api.db.slick.Config.driver.simple._
+import slick.driver.PostgresDriver.simple._
 
 
 

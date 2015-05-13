@@ -26,3 +26,5 @@ build-impl.xml
 *.swp
 /activator*
 /activator-launch*
+/bin/
+/.cache
