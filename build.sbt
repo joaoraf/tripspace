@@ -9,6 +9,8 @@ scalaVersion := "2.11.6"
 
 resolvers := ("Atlassian Releases" at "https://maven.atlassian.com/public/") +: resolvers.value
 
+resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+
 //resolvers += Resolver.sonatypeRepo("snapshots")
 
 routesGenerator := InjectedRoutesGenerator
