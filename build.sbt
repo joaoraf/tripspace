@@ -16,6 +16,7 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 routesGenerator := InjectedRoutesGenerator
 
 libraryDependencies ++= Seq(
+  ws,
 //  "com.mohiva" %% "play-silhouette" % "3.0.0-SNAPSHOT",
   "org.webjars" %% "webjars-play" % "2.4.0-RC1",
   "org.webjars" % "bootstrap" % "3.3.4",
