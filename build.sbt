@@ -20,7 +20,11 @@ libraryDependencies ++= Seq(
   "org.webjars" % "jquery" % "2.1.4",
   "com.typesafe.akka" %% "akka-agent" % "2.3.9",
   "net.codingwell" %% "scala-guice" % "4.0.0-beta5",
-  "com.typesafe.play" %% "play-slick" % "1.0.0-SNAPSHOT",
+//  "com.typesafe.play" %% "play-slick" % "1.0.0-SNAPSHOT",
+// These should be removed after play-slick releases:
+  "com.typesafe.play" %% "play-specs2" % "2.4.0-RC2",
+  "com.typesafe.play" %% "play-jdbc" % "2.4.0-RC2",
+  "com.typesafe.slick" %% "slick" % "3.0.0",
   "mysql" % "mysql-connector-java" % "5.1.32",
   "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 //  "com.mohiva" %% "play-silhouette-testkit" % "3.0.0-SNAPSHOT" % "test",
