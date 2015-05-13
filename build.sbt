@@ -1,4 +1,5 @@
 //import play.PlayScala
+import NativePackagerKeys._
 
 name := """tripspace"""
 
@@ -31,7 +32,7 @@ EclipseKeys.createSrc := EclipseCreateSrc.All
 
 //CoffeeScriptKeys.sourceMap := true
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala,SbtWeb)
+lazy val root = (project in file(".")).enablePlugins(PlayScala,SbtWeb,JavaAppPackaging)
 
 
 scalacOptions ++= Seq(

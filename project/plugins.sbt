@@ -22,6 +22,8 @@ addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0-RC2")
 // Use the Scalariform plugin to reformat the code
 //addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
 
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.0")
+
 // web plugins
 
 //addSbtPlugin("com.typesafe.sbt" % "sbt-coffeescript" % "1.0.0")
