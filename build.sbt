@@ -14,7 +14,7 @@ resolvers := ("Atlassian Releases" at "https://maven.atlassian.com/public/") +: 
 routesGenerator := InjectedRoutesGenerator
 
 libraryDependencies ++= Seq(
-  "com.mohiva" %% "play-silhouette" % "3.0.0-SNAPSHOT",
+//  "com.mohiva" %% "play-silhouette" % "3.0.0-SNAPSHOT",
   "org.webjars" %% "webjars-play" % "2.4.0-RC1",
   "org.webjars" % "bootstrap" % "3.3.4",
   "org.webjars" % "jquery" % "2.1.4",
