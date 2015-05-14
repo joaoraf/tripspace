@@ -491,7 +491,7 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
     } yield {
       loginUserMap
         .get((loginInfo.providerID,loginInfo.providerKey))
-        .map(userMap)
+        .flatMap(userMap.get)
     }) transactionally
      
   
