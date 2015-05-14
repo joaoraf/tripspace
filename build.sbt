@@ -11,16 +11,17 @@ scalaVersion := "2.11.6"
 
 
 bashScriptExtraDefines += """
-function herokuUrlToJdbcUrl() {
-	echo "$@" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#jdbc:postgres://\3?user=\1\&password=\2#'
+function addHerokuParams() {
+	VARS=`echo "$@" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#DB_HOST=\3 DB_USER=\1 DB_PASSWORD=\2#'`
+	export $VARS
+	addJava "-Dslick.dbs.default.db.url=jdbc:postgres://$DB_HOST"
+	addJava "-Dslick.dbs.default.db.user=$DB_USER"
+	addJava "-Dslick.dbs.default.db.password=$DB_PASSWORD"
+	addJava "-Dhttp.port=${PORT}"
 }
 
 if [ "$DATABASE_URL" != "" ] ; then 
-	JDBC_URL=$( herokuUrlToJdbcUrl "$DATABASE_URL" )
-
-	addJava "-Dslick.dbs.default.db.url=${JDBC_URL}"
-
-	addJava "-Dhttp.port=${PORT}"
+	addHerokuParams
 fi	
 
 """
