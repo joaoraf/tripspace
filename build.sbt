@@ -12,7 +12,7 @@ scalaVersion := "2.11.6"
 
 bashScriptExtraDefines += """
 function herokuUrlToJdbcUrl() {
-	echo "$@" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#jdbc:postgres:\3?user=\1\&password=\2#'
+	echo "$@" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#jdbc:postgres://\3?user=\1\&password=\2#'
 }
 
 if [ "$DATABASE_URL" != "" ] ; then 
