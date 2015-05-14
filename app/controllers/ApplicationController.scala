@@ -23,6 +23,8 @@ import models.User
 import scala.concurrent.Future
 import play.api.i18n.Messages
 import play.api.i18n.MessagesApi
+import play.api.db.slick.DatabaseConfigProvider
+import slick.profile.RelationalProfile
 
 /**
  * The basic application controller.
@@ -33,9 +35,13 @@ import play.api.i18n.MessagesApi
 class ApplicationController @Inject() (
   socialProviderRegistry: SocialProviderRegistry,
   messagesApi : MessagesApi,
+  dbConfigProvider : DatabaseConfigProvider,
   protected val env: Environment[User, SessionAuthenticator])
   extends Silhouette[User, SessionAuthenticator] {
 
+  val dbConfig = dbConfigProvider.get[RelationalProfile]
+  println(s"dbConfig.config = ${dbConfig.config}")
+  
   /**
    * Handles the index action.
    *
