@@ -42,6 +42,11 @@ class SocialAuthController @Inject() (
     (socialProviderRegistry.get(provider) match {
       case Some(p: SocialProvider with CommonSocialProfileBuilder) =>
         import p.authInfoClassTag
+        if(p.authInfoClassTag == null) {
+          val e = new RuntimeException(s"p.authInfoClassTag is null! provider=${provider} p=${p}")
+          e.printStackTrace()
+          throw e
+        }
         p.authenticate().flatMap {
           case Left(result) => Future.successful(result)
           case Right(authInfo) => for {
