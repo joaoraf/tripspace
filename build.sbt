@@ -12,8 +12,17 @@ scalaVersion := "2.11.6"
 
 bashScriptExtraDefines += """
 function addHerokuParams() {
-	VARS=`echo "$@" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#DB_HOST=\3 DB_USER=\1 DB_PASSWORD=\2#'`
-	export $VARS
+	DBVARS=`echo "$DATABASE_URL" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#DB_HOST=\3 DB_USER=\1 DB_PASSWORD=\2#'`
+	echo "DBVARS=$DBVARS"
+	if [ "$DBVARS" == "" ] ; then
+		echo "Not export DBVARS"
+		exit 1
+	else
+		echo "Exporting"
+		export $DBVARS
+		echo "Env:"
+		set
+	fi
 	addJava "-Dslick.dbs.default.db.url=jdbc:postgres://$DB_HOST"
 	addJava "-Dslick.dbs.default.db.user=$DB_USER"
 	addJava "-Dslick.dbs.default.db.password=$DB_PASSWORD"
