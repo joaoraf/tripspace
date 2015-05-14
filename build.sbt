@@ -23,7 +23,7 @@ function addHerokuParams() {
 		echo "Env:"
 		set
 	fi
-	addJava "-Dslick.dbs.default.db.url=jdbc:postgres://$DB_HOST"
+	addJava "-Dslick.dbs.default.db.url=jdbc:postgresql://$DB_HOST"
 	addJava "-Dslick.dbs.default.db.user=$DB_USER"
 	addJava "-Dslick.dbs.default.db.password=$DB_PASSWORD"
 	addJava "-Dhttp.port=${PORT}"
@@ -62,7 +62,8 @@ libraryDependencies ++= Seq(
 //  "com.mohiva" %% "play-silhouette-testkit" % "3.0.0-SNAPSHOT" % "test",
   "org.scalaz" %% "scalaz-core" % "7.1.2",
   cache,
-  "org.mindrot" % "jbcrypt" % "0.3m"
+  "org.mindrot" % "jbcrypt" % "0.3m",
+  "com.zaxxer" % "HikariCP" % "2.3.7"
 )
 
 EclipseKeys.createSrc := EclipseCreateSrc.All
