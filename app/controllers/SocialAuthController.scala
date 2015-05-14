@@ -13,6 +13,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Action
 import scala.concurrent.Future
 import play.api.i18n.MessagesApi
+import scala.reflect.ClassTag
 
 /**
  * The social auth controller.
@@ -44,17 +45,27 @@ class SocialAuthController @Inject() (
         p.authenticate().flatMap {
           case Left(result) => Future.successful(result)
           case Right(authInfo) => for {
+            _ <- Future.successful(logger.debug(s"authInfo=${authInfo}"))
             profile <- p.retrieveProfile(authInfo)
+            _ <- Future.successful(logger.debug(s"profile=${profile}"))
             user <- userService.save(profile)
+            _ <- Future.successful(logger.debug(s"user=${user}"))
+            _ <- Future.successful(logger.debug(s"p.A classTag = ${implicitly[ClassTag[p.A]]}"))
             authInfoExists <- authInfoRepository.find[p.A](profile.loginInfo).map(_.isDefined)
-            _ <- if(authInfoExists) { 
+            _ <- Future.successful(logger.debug(s"authInfoExists=${authInfoExists}"))
+            _ <- if(authInfoExists) {
+                      logger.debug("updating")
                       authInfoRepository.update[p.A](profile.loginInfo, authInfo) 
                  } else { 
+                      logger.debug("adding")
                       authInfoRepository.add[p.A](profile.loginInfo, authInfo)
                  }
             authenticator <- env.authenticatorService.create(profile.loginInfo)
+            _ <- Future.successful(logger.debug(s"authenticator=${authenticator}"))
             value <- env.authenticatorService.init(authenticator)
+            _ <- Future.successful(logger.debug(s"value=${value}"))
             result <- env.authenticatorService.embed(value, Redirect(routes.ApplicationController.index()))
+            _ <- Future.successful(logger.debug(s"result=${result}"))
           } yield {
             env.eventBus.publish(LoginEvent(user, request, messages))
             result
