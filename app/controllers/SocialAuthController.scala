@@ -45,11 +45,11 @@ class SocialAuthController @Inject() (
           case Right(authInfo) => for {
             profile <- p.retrieveProfile(authInfo)
             user <- userService.save(profile)
-            authInfoExists <- authInfoRepository.find(profile.loginInfo).map(_.isDefined)
+            authInfoExists <- authInfoRepository.find[p.A](profile.loginInfo).map(_.isDefined)
             _ <- if(authInfoExists) { 
-                      authInfoRepository.update(profile.loginInfo, authInfo) 
+                      authInfoRepository.update[p.A](profile.loginInfo, authInfo) 
                  } else { 
-                      authInfoRepository.add(profile.loginInfo, authInfo)
+                      authInfoRepository.add[p.A](profile.loginInfo, authInfo)
                  }
             authenticator <- env.authenticatorService.create(profile.loginInfo)
             value <- env.authenticatorService.init(authenticator)
