@@ -40,6 +40,7 @@ class SocialAuthController @Inject() (
     val messages = messagesApi.preferred(request)
     (socialProviderRegistry.get(provider) match {
       case Some(p: SocialProvider with CommonSocialProfileBuilder) =>
+        import p.authInfoClassTag
         p.authenticate().flatMap {
           case Left(result) => Future.successful(result)
           case Right(authInfo) => for {
