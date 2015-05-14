@@ -45,27 +45,27 @@ class SocialAuthController @Inject() (
         p.authenticate().flatMap {
           case Left(result) => Future.successful(result)
           case Right(authInfo) => for {
-            _ <- Future.successful(logger.debug(s"authInfo=${authInfo}"))
+            _ <- Future.successful(println/*logger.debug*/(s"authInfo=${authInfo}"))
             profile <- p.retrieveProfile(authInfo)
-            _ <- Future.successful(logger.debug(s"profile=${profile}"))
+            _ <- Future.successful(println/*logger.debug*/(s"profile=${profile}"))
             user <- userService.save(profile)
-            _ <- Future.successful(logger.debug(s"user=${user}"))
-            _ <- Future.successful(logger.debug(s"p.A classTag = ${implicitly[ClassTag[p.A]]}"))
+            _ <- Future.successful(println/*logger.debug*/(s"user=${user}"))
+            _ <- Future.successful(println/*logger.debug*/(s"p.A classTag = ${implicitly[ClassTag[p.A]]}"))
             authInfoExists <- authInfoRepository.find[p.A](profile.loginInfo).map(_.isDefined)
-            _ <- Future.successful(logger.debug(s"authInfoExists=${authInfoExists}"))
+            _ <- Future.successful(println/*logger.debug*/(s"authInfoExists=${authInfoExists}"))
             _ <- if(authInfoExists) {
-                      logger.debug("updating")
+                      println/*logger.debug*/("updating")
                       authInfoRepository.update[p.A](profile.loginInfo, authInfo) 
                  } else { 
-                      logger.debug("adding")
+                      println/*logger.debug*/("adding")
                       authInfoRepository.add[p.A](profile.loginInfo, authInfo)
                  }
             authenticator <- env.authenticatorService.create(profile.loginInfo)
-            _ <- Future.successful(logger.debug(s"authenticator=${authenticator}"))
+            _ <- Future.successful(println/*logger.debug*/(s"authenticator=${authenticator}"))
             value <- env.authenticatorService.init(authenticator)
-            _ <- Future.successful(logger.debug(s"value=${value}"))
+            _ <- Future.successful(println/*logger.debug*/(s"value=${value}"))
             result <- env.authenticatorService.embed(value, Redirect(routes.ApplicationController.index()))
-            _ <- Future.successful(logger.debug(s"result=${result}"))
+            _ <- Future.successful(println/*logger.debug*/(s"result=${result}"))
           } yield {
             env.eventBus.publish(LoginEvent(user, request, messages))
             result
