@@ -1,11 +1,30 @@
 //import play.PlayScala
-import NativePackagerKeys._
+//import NativePackagerKeys._
 
 name := """tripspace"""
 
 version := "1.0.0"
 
 scalaVersion := "2.11.6"
+
+
+
+
+bashScriptExtraDefines += """
+function herokuUrlToJdbcUrl() {
+	echo "$@" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#jdbc:postgres:\3?user=\1\&password=\2\&ssl=true\&sslfactory=org.postgresql.ssl.NonValidatingFactory#'
+}
+
+if [ "$STACK" != "" ] ; then 
+	JDBC_URL=$( herokuUrlToJdbcUrl "$DATABASE_URL" )
+
+	addJava "-Dslick.dbs.default.db.url=${JDBC_URL}"
+
+	addJava "-Dhttp.port=${PORT}"
+fi	
+
+"""
+
 
 resolvers := ("Atlassian Releases" at "https://maven.atlassian.com/public/") +: resolvers.value
 
