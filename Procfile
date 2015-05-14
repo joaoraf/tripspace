@@ -1,0 +1,1 @@
+web: target/universal/stage/bin/tripspace -Dhttp.port=${PORT} -DapplyEvolutions.default=true -Dslick.dbs.default.db.url=${DATABASE_URL}

@@ -155,4 +155,10 @@ trait TripspaceDBTableDefinitions {
     }
     
     val transportModalities = TableQuery[TransportModalities]
+    
+    
+    val tripTables = Seq(
+        transportModalities, slickRegions, slickPlaces, slickPlaceRegions, 
+        slickTrips, slickTripDays, slickActivities, slickVisitActivities, 
+        slickTransportActivities, slickRegionSubRegions)
 }

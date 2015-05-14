@@ -32,7 +32,8 @@ libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
 //  "com.mohiva" %% "play-silhouette-testkit" % "3.0.0-SNAPSHOT" % "test",
   "org.scalaz" %% "scalaz-core" % "7.1.2",
-  cache
+  cache,
+  "org.mindrot" % "jbcrypt" % "0.3m"
 )
 
 EclipseKeys.createSrc := EclipseCreateSrc.All

@@ -16,6 +16,9 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Action
 import scala.concurrent.Future
 import play.api.i18n.MessagesApi
+import models.daos.slickdaos._
+import com.mohiva.play.silhouette.api.util.PasswordInfo
+
 
 /**
  * The sign up controller.
@@ -63,7 +66,7 @@ class SignUpController @Inject() (
             for {
               avatar <- avatarService.retrieveURL(data.email)
               user <- userService.save(user.copy(avatarURL = avatar))
-              authInfoExists <- authInfoRepository.find(loginInfo).map(_.isDefined)
+              authInfoExists <- authInfoRepository.find[PasswordInfo](loginInfo).map(_.isDefined)
               _ <- if(authInfoExists) { authInfoRepository.update(loginInfo,authInfo) } 
                    else { authInfoRepository.add(loginInfo,authInfo)}               
               authenticator <- env.authenticatorService.create(loginInfo)

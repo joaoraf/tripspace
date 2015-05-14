@@ -104,4 +104,7 @@ trait SilhoutteDBTableDefinitions {
   val slickOAuth1Infos = TableQuery[OAuth1Infos]
   val slickOAuth2Infos = TableQuery[OAuth2Infos]
 
+  val silhouetteTables = Seq(
+      slickUsers,slickLoginInfos,slickUserLoginInfos,slickPasswordInfos,
+      slickOAuth1Infos, slickOAuth2Infos)
 }
