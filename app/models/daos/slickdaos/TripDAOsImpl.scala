@@ -75,22 +75,28 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
     
     def buildMap()(implicit ec : ExecutionContext) : DBIO[Map[K,V]] 
     
-    def reloadCache()(implicit ec : ExecutionContext) : DBIO[Map[K,V]] = for {        
+    def reloadCache()(implicit ec : ExecutionContext) : DBIO[Map[K,V]] = for {       
+      _ <- DBIO.successful("reloadCache: starting")
       newCache <- buildMap()
       _ <- DBIO.from (agent.alter(Some(newCache)))
+      _ <- DBIO.successful("reloadCache: ending")
     } yield (newCache)      
     
     def apply()(implicit ec : ExecutionContext) : DBIO[Map[K,V]] = (for {        
+      _ <- DBIO.successful("apply: starting")
       cache <- agent() match {
         case Some(c) => DBIO.successful(c)
         case None => reloadCache()
       }        
+      _ <- DBIO.successful("apply: ending")
     } yield (cache)).transactionally
     
     def update(k : K, v : V)(implicit ec : ExecutionContext) = for {
+      _ <- DBIO.successful("update: starting")
        cache <- reloadCache()         
        newCache = cache + (k -> v)
        _ <- DBIO.from(agent.alter(Some(newCache)))           
+      _ <- DBIO.successful("update: ending")
     } yield(newCache)
   }
   
@@ -444,6 +450,7 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
   object user extends SilhoutteDBTableDefinitions {             
     val cache = new MapCache[String,User] {
       def buildMap()(implicit ec : ExecutionContext) = for {
+        _ <- DBIO.successful(println("buildMap starting"))
         userLogins <- (for {
             user <- slickUsers
             uli <- slickUserLoginInfos
@@ -454,18 +461,19 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
         users = userLogins map { case (user,loginInfo) =>
           (user.userID,User(UUID.fromString(user.userID), LoginInfo(loginInfo.providerID, loginInfo.providerKey), user.firstName, user.lastName, user.fullName, user.email, user.avatarURL))
         } toMap
-      } yield (users)
+      } yield { println(s"buildMap ending: users=${users}") ; users }
     }
     
     val loginInfoToUserCache = new MapCache[(String,String),String] {
-      def buildMap()(implicit ec : ExecutionContext) = for {
+      def buildMap()(implicit ec : ExecutionContext) = { println("loginInfoToUserCache.buildMap started") ; for {
         seq <- slickLoginInfos
               .join(slickUserLoginInfos)
               .on({case (li,uli) => uli.loginInfoId === li.id})
               .map({case (li,uli) => ((li.providerID, li.providerKey), uli.userID)})
               .result
         m = groupedMap1(seq)
-      } yield(m)
+        _ <- DBIO.successful(println(s"login info cache: m = ${m}"))
+      } yield(m) }
     }
     
     def fill(userIds : Set[String])(implicit ec : ExecutionContext) =
