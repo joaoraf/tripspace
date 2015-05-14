@@ -41,7 +41,7 @@ class SocialAuthController @Inject() (
     val messages = messagesApi.preferred(request)
     (socialProviderRegistry.get(provider) match {
       case Some(p: SocialProvider with CommonSocialProfileBuilder) =>
-        import p.authInfoClassTag
+        implicit  val aict  = p.authInfoClassTag
         if(p.authInfoClassTag == null) {
           val e = new RuntimeException(s"p.authInfoClassTag is null! provider=${provider} p=${p}")
           e.printStackTrace()
