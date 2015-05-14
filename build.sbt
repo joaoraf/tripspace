@@ -12,10 +12,10 @@ scalaVersion := "2.11.6"
 
 bashScriptExtraDefines += """
 function herokuUrlToJdbcUrl() {
-	echo "$@" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#jdbc:postgres:\3?user=\1\&password=\2\&ssl=true\&sslfactory=org.postgresql.ssl.NonValidatingFactory#'
+	echo "$@" | sed -e 's#postgres://\(.*\):\(.*\)\@\(.*\)#jdbc:postgres:\3?user=\1\&password=\2#'
 }
 
-if [ "$STACK" != "" ] ; then 
+if [ "$DATABASE_URL" != "" ] ; then 
 	JDBC_URL=$( herokuUrlToJdbcUrl "$DATABASE_URL" )
 
 	addJava "-Dslick.dbs.default.db.url=${JDBC_URL}"
