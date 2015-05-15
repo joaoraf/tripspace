@@ -38,24 +38,36 @@ class SocialAuthController @Inject() (
    * @return The result to display.
    */
   def authenticate(provider: String) = Action.async { implicit request =>
+    logger.debug(s"authenticate: started with provider=${provider}")
     val messages = messagesApi.preferred(request)
     (socialProviderRegistry.get(provider) match {
       case Some(p: SocialProvider with CommonSocialProfileBuilder) =>
+        logger.debug(s"authenticate: provider found=${p}")
         import p.authInfoClassTag
         p.authenticate().flatMap {
-          case Left(result) => Future.successful(result)
+          case Left(result) => 
+                logger.debug(s"authenticate: authenticated directly result=${result}")
+                Future.successful(result)
           case Right(authInfo) => for {
+            _ <- Future.successful(logger.debug(s"authenticate: must process authInfo=${authInfo}"))
             profile <- p.retrieveProfile(authInfo)
+            _ <- Future.successful(logger.debug(s"authenticate: found profile=${profile}, loginInfo=${profile.loginInfo}"))
             user <- userService.save(profile)
+            _ <- Future.successful(logger.debug(s"authenticate: found user=${user}"))
             authInfoExists <- authInfoRepository.find[p.A](profile.loginInfo).map(_.isDefined)
             _ <- if(authInfoExists) {
+                      logger.debug(s"authenticate: authInfoExists=true updating")
                       authInfoRepository.update[p.A](profile.loginInfo, authInfo) 
                  } else { 
+                      logger.debug(s"authenticate: authInfoExists=false adding")
                       authInfoRepository.add[p.A](profile.loginInfo, authInfo)
                  }
             authenticator <- env.authenticatorService.create(profile.loginInfo)
+            _ <- Future.successful(logger.debug(s"authenticate: created authenticator=${authenticator}"))
             value <- env.authenticatorService.init(authenticator)
+            _ <- Future.successful(logger.debug(s"authenticate: authenticator initialization returned value=${value}"))
             result <- env.authenticatorService.embed(value, Redirect(routes.ApplicationController.index()))
+            _ <- Future.successful(logger.debug(s"authenticate: authenticator embedding returned result=${result}"))
           } yield {
             env.eventBus.publish(LoginEvent(user, request, messages))
             result

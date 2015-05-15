@@ -1,6 +1,6 @@
 package app
 
-import com.mohiva.play.silhouette.api.{ Logger, SecuredSettings }
+import com.mohiva.play.silhouette.api.{ SecuredSettings }
 import controllers.routes
 import play.api.GlobalSettings
 import play.api.i18n.{ Lang, Messages }
@@ -8,6 +8,27 @@ import play.api.mvc.Results._
 import play.api.mvc.{ RequestHeader, Result }
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import play.api.mvc.Filter
+import play.api.Logger
+import play.api.mvc.WithFilters
+
+object AccessLoggingFilter extends Filter {
+  
+  val accessLogger = Logger("access")
+  
+  def apply(next: (RequestHeader) => Future[Result])(request: RequestHeader) : Future[Result] = {
+    import play.api.libs.concurrent.Execution.Implicits.defaultContext
+    val resultFuture = next(request)
+    
+    resultFuture.foreach(result => {
+      val msg = s"method=${request.method} uri=${request.uri} remote-address=${request.remoteAddress}" +
+        s" status=${result.header.status}";
+      accessLogger.info(msg)
+    })
+    
+    resultFuture
+  }
+}
 
 /**
  * The global object.
@@ -17,7 +38,7 @@ object Global extends Global
 /**
  * The global configuration.
  */
-trait Global extends GlobalSettings with SecuredSettings with Logger {
+class Global extends WithFilters(AccessLoggingFilter) with GlobalSettings with SecuredSettings {  
   
   /**
    * Called when a user is not authenticated.

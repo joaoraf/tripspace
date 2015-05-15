@@ -35,11 +35,9 @@ import slick.profile.RelationalProfile
 class ApplicationController @Inject() (
   socialProviderRegistry: SocialProviderRegistry,
   messagesApi : MessagesApi,
-  dbConfigProvider : DatabaseConfigProvider,
   protected val env: Environment[User, SessionAuthenticator])
   extends Silhouette[User, SessionAuthenticator] {
-
-  val dbConfig = dbConfigProvider.get[RelationalProfile]
+  
   
   /**
    * Handles the index action.

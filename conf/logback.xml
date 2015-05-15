@@ -1,8 +1,9 @@
 <configuration>
+   <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />  
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-	    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
+      <pattern>%coloredLevel %logger{15} - %message%n%xException{10}</pattern>
     </encoder>
   </appender>
 
@@ -16,6 +17,21 @@
   <logger name="application" level="DEBUG" >
     <appender-ref ref="STDOUT" />
   </logger>
+  
+  <logger name="controllers" level="DEBUG" >
+    <appender-ref ref="STDOUT" />
+  </logger>
+  
+  <logger name="access" level="DEBUG" >
+    <appender-ref ref="STDOUT" />
+  </logger>
+  
+  <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
+  <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
+  <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
+  <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
+  <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
+  
 
   <root level="ERROR">
     <appender-ref ref="STDOUT" />

@@ -32,7 +32,7 @@ class CredentialsAuthController @Inject() (
   socialProviderRegistry: SocialProviderRegistry,
   messagesApi : MessagesApi,
   protected val env: Environment[User, SessionAuthenticator])
-  extends Silhouette[User, SessionAuthenticator] {
+  extends Silhouette[User, SessionAuthenticator] with Logger {
 
   /**
    * Authenticates a user against the credentials provider.
@@ -40,20 +40,31 @@ class CredentialsAuthController @Inject() (
    * @return The result to display.
    */
   def authenticate = Action.async { implicit request =>
+    logger.debug("authenticate: starting") 
     val messages = messagesApi.preferred(request)
     SignInForm.form.bindFromRequest.fold(
-      form => Future.successful(BadRequest(views.html.signIn(form, socialProviderRegistry))),
-      credentials => credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
-        val result = Redirect(routes.ApplicationController.index())
-        userService.retrieve(loginInfo).flatMap {
-          case Some(user) =>
-              env.authenticatorService.create(loginInfo).flatMap { authenticator =>
-              env.eventBus.publish(LoginEvent(user, request, messages))
-              env.authenticatorService.init(authenticator).flatMap { v =>
-                env.authenticatorService.embed(v, result)
-              }
-            }
-          case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
+      form => {
+        logger.debug(s"authenticate: on form fold alternative: form=${form}") 
+        Future.successful(BadRequest(views.html.signIn(form, socialProviderRegistry)))
+      },
+      credentials => {
+        logger.debug(s"authenticate: on credentials alternative: credentials=${credentials}") 
+        credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
+          logger.debug(s"authenticate: loginInfo=${loginInfo}") 
+          val result = Redirect(routes.ApplicationController.index())
+          userService.retrieve(loginInfo).flatMap {
+            case Some(user) =>
+                logger.debug(s"authenticate: user=${user}, creating authenticator") 
+                env.authenticatorService.create(loginInfo).flatMap { authenticator =>
+                  logger.debug(s"authenticate: created authenticator=${authenticator}") 
+                  env.eventBus.publish(LoginEvent(user, request, messages))
+                  env.authenticatorService.init(authenticator).flatMap { v =>
+                    logger.debug(s"authenticate: authenticator initialized. v=${v}") 
+                    env.authenticatorService.embed(v, result)
+                  }
+                }
+            case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
+          }
         }
       }.recover {
         case e: ProviderException =>
