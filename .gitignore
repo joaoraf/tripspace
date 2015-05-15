@@ -28,3 +28,7 @@ build-impl.xml
 /activator-launch*
 /bin/
 /.cache
+/_local
+/lib/*-sources.jar
+/lib/*-javadoc.jar
+/lib/*.pom

@@ -450,7 +450,6 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
   object user extends SilhoutteDBTableDefinitions {             
     val cache = new MapCache[String,User] {
       def buildMap()(implicit ec : ExecutionContext) = for {
-        _ <- DBIO.successful(println("buildMap starting"))
         userLogins <- (for {
             user <- slickUsers
             uli <- slickUserLoginInfos
@@ -461,19 +460,18 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
         users = userLogins map { case (user,loginInfo) =>
           (user.userID,User(UUID.fromString(user.userID), LoginInfo(loginInfo.providerID, loginInfo.providerKey), user.firstName, user.lastName, user.fullName, user.email, user.avatarURL))
         } toMap
-      } yield { println(s"buildMap ending: users=${users}") ; users }
+      } yield { users }
     }
     
     val loginInfoToUserCache = new MapCache[(String,String),String] {
-      def buildMap()(implicit ec : ExecutionContext) = { println("loginInfoToUserCache.buildMap started") ; for {
+      def buildMap()(implicit ec : ExecutionContext) = for {
         seq <- slickLoginInfos
               .join(slickUserLoginInfos)
               .on({case (li,uli) => uli.loginInfoId === li.id})
               .map({case (li,uli) => ((li.providerID, li.providerKey), uli.userID)})
               .result
         m = groupedMap1(seq)
-        _ <- DBIO.successful(println(s"login info cache: m = ${m}"))
-      } yield(m) }
+      } yield(m) 
     }
     
     def fill(userIds : Set[String])(implicit ec : ExecutionContext) =

@@ -42,35 +42,20 @@ class SocialAuthController @Inject() (
     (socialProviderRegistry.get(provider) match {
       case Some(p: SocialProvider with CommonSocialProfileBuilder) =>
         implicit  val aict  = p.authInfoClassTag
-        if(p.authInfoClassTag == null) {
-          val e = new RuntimeException(s"p.authInfoClassTag is null! provider=${provider} p=${p}")
-          e.printStackTrace()
-          throw e
-        }
         p.authenticate().flatMap {
           case Left(result) => Future.successful(result)
           case Right(authInfo) => for {
-            _ <- Future.successful(println/*logger.debug*/(s"authInfo=${authInfo}"))
             profile <- p.retrieveProfile(authInfo)
-            _ <- Future.successful(println/*logger.debug*/(s"profile=${profile}"))
             user <- userService.save(profile)
-            _ <- Future.successful(println/*logger.debug*/(s"user=${user}"))
-            _ <- Future.successful(println/*logger.debug*/(s"p.A classTag = ${implicitly[ClassTag[p.A]]}"))
             authInfoExists <- authInfoRepository.find[p.A](profile.loginInfo).map(_.isDefined)
-            _ <- Future.successful(println/*logger.debug*/(s"authInfoExists=${authInfoExists}"))
             _ <- if(authInfoExists) {
-                      println/*logger.debug*/("updating")
                       authInfoRepository.update[p.A](profile.loginInfo, authInfo) 
                  } else { 
-                      println/*logger.debug*/("adding")
                       authInfoRepository.add[p.A](profile.loginInfo, authInfo)
                  }
             authenticator <- env.authenticatorService.create(profile.loginInfo)
-            _ <- Future.successful(println/*logger.debug*/(s"authenticator=${authenticator}"))
             value <- env.authenticatorService.init(authenticator)
-            _ <- Future.successful(println/*logger.debug*/(s"value=${value}"))
             result <- env.authenticatorService.embed(value, Redirect(routes.ApplicationController.index()))
-            _ <- Future.successful(println/*logger.debug*/(s"result=${result}"))
           } yield {
             env.eventBus.publish(LoginEvent(user, request, messages))
             result

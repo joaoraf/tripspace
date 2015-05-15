@@ -102,7 +102,7 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
       googleProvider,
       facebookProvider,
       twitterProvider,
-      vkProvider,
+//      vkProvider,
       xingProvider,
       yahooProvider,
       clefProvider
@@ -248,7 +248,7 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
    * @param stateProvider The OAuth2 state provider implementation.
    * @return The VK provider.
    */
-  @Provides
+/*  @Provides
   def provideVKProvider(httpLayer: HTTPLayer, stateProvider: OAuth2StateProvider): VKProvider = {
     VKProvider(httpLayer, stateProvider, OAuth2Settings(
       authorizationURL = Play.configuration.getString("silhouette.vk.authorizationURL"),
@@ -257,7 +257,7 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
       clientID = Play.configuration.getString("silhouette.vk.clientID").getOrElse(""),
       clientSecret = Play.configuration.getString("silhouette.vk.clientSecret").getOrElse(""),
       scope = Play.configuration.getString("silhouette.vk.scope")))
-  }
+  } */
 
   /**
    * Provides the Clef provider.

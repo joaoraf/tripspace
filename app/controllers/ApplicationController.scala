@@ -40,7 +40,6 @@ class ApplicationController @Inject() (
   extends Silhouette[User, SessionAuthenticator] {
 
   val dbConfig = dbConfigProvider.get[RelationalProfile]
-  println(s"dbConfig.config = ${dbConfig.config}")
   
   /**
    * Handles the index action.

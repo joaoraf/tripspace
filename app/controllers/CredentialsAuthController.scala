@@ -46,10 +46,13 @@ class CredentialsAuthController @Inject() (
       credentials => credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
         val result = Redirect(routes.ApplicationController.index())
         userService.retrieve(loginInfo).flatMap {
-          case Some(user) => env.authenticatorService.create(loginInfo).flatMap { authenticator =>
-            env.eventBus.publish(LoginEvent(user, request, messages))
-            env.authenticatorService.init(authenticator).flatMap(v => env.authenticatorService.embed(v, result))
-          }
+          case Some(user) =>
+              env.authenticatorService.create(loginInfo).flatMap { authenticator =>
+              env.eventBus.publish(LoginEvent(user, request, messages))
+              env.authenticatorService.init(authenticator).flatMap { v =>
+                env.authenticatorService.embed(v, result)
+              }
+            }
           case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
         }
       }.recover {
