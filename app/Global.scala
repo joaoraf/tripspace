@@ -1,6 +1,6 @@
 package app
 
-import com.mohiva.play.silhouette.api.{ SecuredSettings }
+import com.mohiva.play.silhouette.api.{ Logger, SecuredSettings }
 import controllers.routes
 import play.api.GlobalSettings
 import play.api.i18n.{ Lang, Messages }
@@ -9,8 +9,9 @@ import play.api.mvc.{ RequestHeader, Result }
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import play.api.mvc.Filter
-import play.api.Logger
 import play.api.mvc.WithFilters
+import play.api.Logger
+
 
 object AccessLoggingFilter extends Filter {
   
@@ -18,27 +19,34 @@ object AccessLoggingFilter extends Filter {
   
   def apply(next: (RequestHeader) => Future[Result])(request: RequestHeader) : Future[Result] = {
     import play.api.libs.concurrent.Execution.Implicits.defaultContext
-    val resultFuture = next(request)
-    
-    resultFuture.foreach(result => {
-      val msg = s"method=${request.method} uri=${request.uri} remote-address=${request.remoteAddress}" +
-        s" status=${result.header.status}";
-      accessLogger.info(msg)
-    })
-    
-    resultFuture
+    if(request.uri.startsWith("/assets") || request.uri.startsWith("/webjars/")) {
+      next(request)
+    } else {
+      for {
+        _ <- Future.successful(accessLogger.info(s"start: method=${request.method} uri=${request.uri} remote-address=${request.remoteAddress}"))
+        resultFuture = next(request)
+        _ <- Future.successful(resultFuture.onFailure { 
+          case ex : Exception =>
+             accessLogger.error(s"end: method=${request.method} uri=${request.uri} remote-address=${request.remoteAddress}" +
+                s" exception=${ex}",ex)
+        }) 
+        result <- resultFuture      
+        _ <- Future.successful(accessLogger.info(s"end: method=${request.method} uri=${request.uri} remote-address=${request.remoteAddress}" +
+          s" status=${result.header.status}"))
+      } yield { result }
+    }
   }
 }
 
 /**
  * The global object.
  */
-object Global extends Global
+object Global extends GlobalImpl
 
 /**
  * The global configuration.
  */
-class Global extends WithFilters(AccessLoggingFilter) with GlobalSettings with SecuredSettings {  
+class GlobalImpl extends WithFilters(AccessLoggingFilter) with SecuredSettings {  
   
   /**
    * Called when a user is not authenticated.

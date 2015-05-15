@@ -32,3 +32,4 @@ build-impl.xml
 /lib/*-sources.jar
 /lib/*-javadoc.jar
 /lib/*.pom
+/.environment
