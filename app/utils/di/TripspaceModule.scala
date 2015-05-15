@@ -92,7 +92,7 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
   def provideSocialProviderRegistry(
     facebookProvider: FacebookProvider,
     googleProvider: GoogleProvider,
-    vkProvider: VKProvider,
+    //vkProvider: VKProvider,
     clefProvider: ClefProvider,
     twitterProvider: TwitterProvider,
     xingProvider: XingProvider,
