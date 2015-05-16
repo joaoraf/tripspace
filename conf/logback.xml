@@ -25,6 +25,11 @@
   <logger name="access" level="DEBUG" >
     <appender-ref ref="STDOUT" />
   </logger>
+
+  <logger name="com.mohiva.play.silhouette" level="DEBUG">
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
   <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
