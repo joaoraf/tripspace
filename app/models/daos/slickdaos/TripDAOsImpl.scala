@@ -447,7 +447,7 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
     }     
   }
   
-  object user extends SilhoutteDBTableDefinitions {             
+  object user extends SilhoutteDBTableDefinitions with Logger {             
     val cache = new MapCache[String,User] {
       def buildMap()(implicit ec : ExecutionContext) = for {
         userLogins <- (for {
@@ -460,7 +460,10 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
         users = userLogins map { case (user,loginInfo) =>
           (user.userID,User(UUID.fromString(user.userID), LoginInfo(loginInfo.providerID, loginInfo.providerKey), user.firstName, user.lastName, user.fullName, user.email, user.avatarURL))
         } toMap
-      } yield { users }
+      } yield { 
+        logger.debug(s"user.buildMap:  users=${users}")
+        users 
+      }
     }
     
     val loginInfoToUserCache = new MapCache[(String,String),String] {
@@ -471,7 +474,10 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
               .map({case (li,uli) => ((li.providerID, li.providerKey), uli.userID)})
               .result
         m = groupedMap1(seq)
-      } yield(m) 
+      } yield {
+        logger.debug(s"loginInfoToUser.buildMap m=${m}")
+        m
+      }
     }
     
     def fill(userIds : Set[String])(implicit ec : ExecutionContext) =
@@ -487,9 +493,11 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
       loginUserMap <- loginInfoToUserCache()
       userMap <- cache()
     } yield {
-      loginUserMap
+      val res = loginUserMap
         .get((loginInfo.providerID,loginInfo.providerKey))
         .flatMap(userMap.get)
+      logger.debug(s"find(loginInfo): loginInfo=${loginInfo}, res=${res}")
+      res
     }) transactionally
      
   
@@ -502,7 +510,10 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
     def find(userID: UUID)(implicit ec : ExecutionContext) = (for {
       cache <- cache()
       user = cache.get(userID.toString)
-    } yield(user)) transactionally
+    } yield {
+      logger.debug(s"find(user): userID=${userID}, user=${user}")
+      user
+    }) transactionally
      
 
     /**
@@ -512,6 +523,7 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
      * @return The saved user.
      */
     def save(user: User)(implicit ec : ExecutionContext) = {
+      logger.debug(s"save: user=${user}")
       val dbUser = DBUser(user.userID.toString, user.firstName, user.lastName, user.fullName, user.email, user.avatarURL)
       for {                
         userExists <- slickUsers.filter(_.id === dbUser.userID).exists.result
@@ -550,7 +562,12 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
         _ <- slickUserLoginInfos += DBUserLoginInfo(dbUser.userID, loginInfoId)
         _ <- cache.update(dbUser.userID,user)
         _ <- loginInfoToUserCache.update((loginInfo.providerID,loginInfo.providerKey),dbUser.userID)
-      } yield (user)
+        endUserCache <- cache()
+        endLoginInfoCache <- loginInfoToUserCache()
+      } yield { 
+        logger.debug(s"save: ending with userCache=${endUserCache}, loginInfoCache=${endLoginInfoCache}")
+        user 
+      }
     } transactionally                  
   }
 }
