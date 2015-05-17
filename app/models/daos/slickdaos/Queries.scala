@@ -447,41 +447,35 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
     }     
   }
   
-  object user extends SilhoutteDBTableDefinitions with Logger {             
-    val cache = new MapCache[String,User] {
-      def buildMap()(implicit ec : ExecutionContext) = for {
-        userLogins <- (for {
-            user <- slickUsers
-            uli <- slickUserLoginInfos
-            if user.id === uli.userID
-            loginInfo <- slickLoginInfos
-            if loginInfo.id === uli.loginInfoId            
-          } yield(user,loginInfo)).result
-        users = userLogins map { case (user,loginInfo) =>
-          (user.userID,User(UUID.fromString(user.userID), LoginInfo(loginInfo.providerID, loginInfo.providerKey), user.firstName, user.lastName, user.fullName, user.email, user.avatarURL))
-        } toMap
-      } yield { 
-        logger.debug(s"user.buildMap:  users=${users}")
-        users 
-      }
+  object user extends SilhoutteDBTableDefinitions with Logger {                 
+    
+    def dbLItoLI(dbli : DBLoginInfo) : LoginInfo = LoginInfo(
+        providerID = dbli.providerID,
+        providerKey = dbli.providerKey
+        )
+    
+    val dbUserToUser : (DBUser,DBLoginInfo) => User = { case (dbu : DBUser, dbli : DBLoginInfo) => User (
+         userID = UUID.fromString(dbu.userID),
+         loginInfo = dbLItoLI(dbli),
+         firstName = dbu.firstName,
+         lastName = dbu.lastName,
+         fullName = dbu.fullName,
+         email = dbu.email,
+         avatarURL = dbu.avatarURL
+        )
     }
     
-    val loginInfoToUserCache = new MapCache[(String,String),String] {
-      def buildMap()(implicit ec : ExecutionContext) = for {
-        seq <- slickLoginInfos
-              .join(slickUserLoginInfos)
-              .on({case (li,uli) => uli.loginInfoId === li.id})
-              .map({case (li,uli) => ((li.providerID, li.providerKey), uli.userID)})
-              .result
-        m = groupedMap1(seq)
-      } yield {
-        logger.debug(s"loginInfoToUser.buildMap m=${m}")
-        m
-      }
-    }
-    
-    def fill(userIds : Set[String])(implicit ec : ExecutionContext) =
-      cache() map (_ filterKeys userIds)
+    def fill(userIds : Set[String])(implicit ec : ExecutionContext) : DBIO[Map[String,User]] = for {
+      dbUsers <- slickUsers
+        .filter(_.id inSet userIds)
+        .join(slickUserLoginInfos)
+        .on({case (u,uli) => u.id === uli.userID})
+        .join(slickLoginInfos)
+        .on({case ((_,uli),li) => uli.loginInfoId === li.id})
+        .map({case ((u,_),li) => (u,li)})
+        .result            
+    } yield(dbUsers.map { case (dbu,dbli) => (dbu.userID,dbUserToUser(dbu,dbli)) }.toMap)
+      
     
     /**
      * Finds a user by its login info.
@@ -489,16 +483,19 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
      * @param loginInfo The login info of the user to find.
      * @return The found user or None if no user for the given login info could be found.
      */
-    def find(loginInfo: LoginInfo)(implicit ec : ExecutionContext) = (for {
-      loginUserMap <- loginInfoToUserCache()
-      userMap <- cache()
-    } yield {
-      val res = loginUserMap
-        .get((loginInfo.providerID,loginInfo.providerKey))
-        .flatMap(userMap.get)
-      logger.debug(s"find(loginInfo): loginInfo=${loginInfo}, res=${res}")
-      res
-    }) transactionally
+    def find(loginInfo: LoginInfo)(implicit ec : ExecutionContext) : DBIO[Option[User]] = 
+      slickLoginInfos
+              .filter(li => li.providerID === loginInfo.providerID &&
+                                      li.providerKey === loginInfo.providerKey)
+              .join(slickUserLoginInfos)
+              .on({case (li,uli) => uli.loginInfoId === li.id})
+              .join(slickUsers)
+              .on({case ((_,uli),u) => uli.userID === u.id})
+              .map({case ((dbli,_),dbu) => (dbu,dbli)})
+              .result
+              .headOption
+              .map(_.map(dbUserToUser.tupled))
+              .transactionally
      
   
     /**
@@ -507,13 +504,9 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
      * @param userID The ID of the user to find.
      * @return The found user or None if no user for the given ID could be found.
      */
-    def find(userID: UUID)(implicit ec : ExecutionContext) = (for {
-      cache <- cache()
-      user = cache.get(userID.toString)
-    } yield {
-      logger.debug(s"find(user): userID=${userID}, user=${user}")
-      user
-    }) transactionally
+    def find(userID: UUID)(implicit ec : ExecutionContext) : DBIO[Option[User]] =
+      fill(Set(userID.toString)).map(_.values.headOption)
+      
      
 
     /**
@@ -558,14 +551,16 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
                      loginInfo.providerKey))        
           } yield (loginInfoId)
         }        
-        _ <- slickUserLoginInfos.filter(_.userID === dbUser.userID).delete
-        _ <- slickUserLoginInfos += DBUserLoginInfo(dbUser.userID, loginInfoId)
-        _ <- cache.update(dbUser.userID,user)
-        _ <- loginInfoToUserCache.update((loginInfo.providerID,loginInfo.providerKey),dbUser.userID)
-        endUserCache <- cache()
-        endLoginInfoCache <- loginInfoToUserCache()
+        suliExists <- slickUserLoginInfos.filter(x =>
+            x.userID === dbUser.userID && 
+            x.loginInfoId === loginInfoId).exists.result
+        _ <- if(!suliExists) {
+                slickUserLoginInfos += DBUserLoginInfo(dbUser.userID, loginInfoId)
+             } else {
+               DBIO.successful(())
+             }         
       } yield { 
-        logger.debug(s"save: ending with userCache=${endUserCache}, loginInfoCache=${endLoginInfoCache}")
+        logger.debug(s"save: ending")
         user 
       }
     } transactionally                  
