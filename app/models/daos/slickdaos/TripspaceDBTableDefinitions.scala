@@ -89,15 +89,15 @@ trait TripspaceDBTableDefinitions {
       def tripId = column[String]("trip_id")
       def dayNumber = column[Int]("day_number")
       def order = column[Int]("activity_order")
-      def visitPlaceId = column[String]("visitPlaceId")
+      def visitCityId = column[String]("visitCityId")
       def visitDescription = column[String]("visit_description", O.Default(""))      
       
       foreignKey("fk_visit_activity_day", (tripId,dayNumber,order), slickActivities)(x => (x.tripId, x.dayNumber, x.order), Cascade,Cascade)
-      foreignKey("fk_visit_activity_place", visitPlaceId, slickPlaces)(_.placeId,Cascade,Restrict)
+      foreignKey("fk_visit_activity_city", visitCityId, slickCities)(_.cityId,Cascade,Restrict)
       
       primaryKey("pk_visit_activity", (tripId,dayNumber,order))                  
       
-      def * = (tripId,dayNumber,order,visitPlaceId,visitDescription) <> (DBVisitActivity.tupled, DBVisitActivity.unapply)
+      def * = (tripId,dayNumber,order,visitCityId,visitDescription) <> (DBVisitActivity.tupled, DBVisitActivity.unapply)
     }
     
     val slickVisitActivities : BaseActivityTableQuery[VisitActivity] = TableQuery[VisitActivity]
@@ -107,45 +107,58 @@ trait TripspaceDBTableDefinitions {
       def dayNumber = column[Int]("day_number")
       def order = column[Int]("activity_order")
       
-      def fromPlaceId = column[String]("fromPlaceId")
-      def toPlaceId = column[String]("toPlaceId")
+      def fromCityId = column[String]("fromCityId")
+      def toCityId = column[String]("toCityId")
       def transportModalityId = column[String]("transport_modality_id")
       def transportDescription = column[String]("transport_description", O.Default(""))
-      foreignKey("fk_transport_activity_from_place", fromPlaceId, slickPlaces)(_.placeId,Cascade,Restrict)
-      foreignKey("fk_transport_activity_to_place", toPlaceId, slickPlaces)(_.placeId,Cascade,Restrict)
+      foreignKey("fk_transport_activity_from_city", fromCityId, slickCities)(_.cityId,Cascade,Restrict)
+      foreignKey("fk_transport_activity_to_city", toCityId, slickCities)(_.cityId,Cascade,Restrict)
       foreignKey("fk_transport_activity_modality", transportModalityId, transportModalities)(_.transportModalityId,Cascade,Restrict)
             
       foreignKey("fk_transport_activity_day", (tripId,dayNumber,order), slickActivities)(x => (x.tripId, x.dayNumber, x.order), Cascade,Cascade)      
       
       primaryKey("pk_transport_activity", (tripId,dayNumber,order))          
       
-      def * = (tripId,dayNumber,order,fromPlaceId,toPlaceId,transportModalityId,transportDescription) <> (DBTransportActivity.tupled, DBTransportActivity.unapply)
+      def * = (tripId,dayNumber,order,fromCityId,toCityId,transportModalityId,transportDescription) <> (DBTransportActivity.tupled, DBTransportActivity.unapply)
     }
     
     val slickTransportActivities : BaseActivityTableQuery[TransportActivity] = TableQuery[TransportActivity]            
     
-    class Places(tag : Tag) extends Table[DBPlace](tag, "place") {
-      def placeId = column[String]("placeId", O.PrimaryKey)
-      def placeName = column[String]("placeName")
-      def placeDescription = column[String]("placeDescription", O.Default(""))
+    class Cities(tag : Tag) extends Table[DBCity](tag, "city") {
+      def cityId = column[String]("cityId", O.PrimaryKey)
+      def cityName = column[String]("cityName")
+      def cityDescription = column[String]("cityDescription", O.Default(""))
       
-      def * = (placeId,placeName,placeDescription) <> (DBPlace.tupled,DBPlace.unapply)
+      def * = (cityId,cityName,cityDescription) <> (DBCity.tupled,DBCity.unapply)
     }
     
-    val slickPlaces = TableQuery[Places]
+    val slickCities = TableQuery[Cities]
     
-    class PlaceRegions(tag : Tag) extends Table[DBPlaceRegion](tag,"place_region") {
-      def placeId = column[String]("placeId")
+    class CityRegions(tag : Tag) extends Table[DBCityRegion](tag,"city_region") {
+      def cityId = column[String]("cityId")
       def regionId = column[String]("region_id")
             
-      primaryKey("pk_place_regions", (placeId,regionId))      
-      foreignKey("fk_user_places_place", placeId, self.slickPlaces)(_.placeId, Cascade,Cascade)
-      foreignKey("fk_user_places_region", placeId, self.slickRegions)(_.regionId, Cascade,Cascade)
+      primaryKey("pk_city_regions", (cityId,regionId))      
+      foreignKey("fk_user_cities_city", cityId, self.slickCities)(_.cityId, Cascade,Cascade)
+      foreignKey("fk_user_cities_region", cityId, self.slickRegions)(_.regionId, Cascade,Cascade)
       
-      def * = (placeId,regionId) <> (DBPlaceRegion.tupled, DBPlaceRegion.unapply)
+      def * = (cityId,regionId) <> (DBCityRegion.tupled, DBCityRegion.unapply)
     }
     
-    val slickPlaceRegions = TableQuery[PlaceRegions]
+    val slickCityRegions = TableQuery[CityRegions]
+    
+    class PointsOfInterest(tag : Tag) extends Table[DBPOI](tag,"poi") {
+      def poiId = column[String]("poiId", O.PrimaryKey)
+      def poiName = column[String]("poiName")
+      def poiDescription = column[String]("poiDescription", O.Default(""))
+      def cityId = column[String]("cityId")
+      
+      foreignKey("fk_poi_city", cityId, self.slickCities)(_.cityId,Cascade,Restrict)
+      
+      def * = (poiId, poiName, poiDescription, cityId) <> (DBPOI.tupled,DBPOI.unapply)
+    }
+    
+    val slickPointsOfInterest = TableQuery[PointsOfInterest]
     
     class TransportModalities(tag :Tag) extends Table[DBTransportModality](tag, "transport_modality") {
       def transportModalityId = column[String]("transport_modality_id",O.PrimaryKey)
@@ -158,7 +171,7 @@ trait TripspaceDBTableDefinitions {
     
     
     val tripTables = Seq(
-        transportModalities, slickRegions, slickPlaces, slickPlaceRegions, 
+        transportModalities, slickRegions, slickCities, slickCityRegions, 
         slickTrips, slickTripDays, slickActivities, slickVisitActivities, 
         slickTransportActivities, slickRegionSubRegions)
 }

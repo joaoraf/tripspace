@@ -32,7 +32,7 @@ case class DBVisitActivity(
     tripId : String,
     dayNumber : Int,
     order : Int,
-    visitPlaceId : String,
+    visitCityId : String,
     visitDescription : String
     )  extends DBBaseActivity
 
@@ -40,8 +40,8 @@ case class DBTransportActivity(
     tripId : String,
     dayNumber : Int,
     order : Int,
-    fromPlaceId : String,
-    toPlaceId : String,
+    fromCityId : String,
+    toCityId : String,
     transportModalityId : String,
     transportDescription : String
     )  extends DBBaseActivity  
@@ -51,17 +51,23 @@ case class DBTransportModality(
     transportModalityName : String
     )
 
-case class DBPlace(
-    placeId : String,
-    placeName : String,
-    placeDescription : String
+case class DBCity(
+    cityId : String,
+    cityName : String,
+    cityDescription : String
     )
 
-case class DBPlaceRegion(
-    placeId : String,
+case class DBCityRegion(
+    cityId : String,
     regionId : String
     )
 
+case class DBPOI(
+    poiId : String,
+    poiName : String,
+    poiDescription : String,
+    cityId : String)    
+    
 case class DBRegion(
     regionId : String,
     regionName : String,

@@ -35,14 +35,14 @@ sealed trait Activity {
 case class UndefinedActivity(lengthHours : Int) extends Activity
 
 case class Visit(    
-    place : Place,
+    city : City,
     visitDescription : String,
     lengthHours : Int
     ) extends Activity
 
 case class Transport(    
-    fromPlace : Place,
-    toPlace : Place,
+    fromCity : City,
+    toCity : City,
     transportModality : TransportModality,
     description : String,
     lengthHours : Int
@@ -53,9 +53,15 @@ case class TransportModality(
     transportModalityName : String
     )
 
-case class Place(
-    placeId : PlaceId,
-    placeName : String,
-    placeDescription : String,
+case class City(
+    cityId : CityId,
+    cityName : String,
+    cityDescription : String,
+    pois : Set[POI] = Set(),
     regions : Set[Region] = Set()
     )    
+
+case class POI(
+    id : POIId,
+    name : String,
+    description : String)    

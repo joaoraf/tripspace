@@ -47,11 +47,11 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
       DBRegion(region.regionId, region.regionName,
              region.regionDescription, region.regionThumbnail)
              
-    implicit def dbPlaceToPlace(dbPlace : DBPlace) : Place =
-      Place(dbPlace.placeId,dbPlace.placeName,dbPlace.placeDescription)
+    implicit def dbCityToCity(dbCity : DBCity) : City =
+      City(dbCity.cityId,dbCity.cityName,dbCity.cityDescription)
     
-    implicit def placeToDBPlace(place : Place) : DBPlace = 
-      DBPlace(place.placeId,place.placeName,place.placeDescription)
+    implicit def cityToDBCity(city : City) : DBCity = 
+      DBCity(city.cityId,city.cityName,city.cityDescription)
       
     implicit def dbTranspModToDomain(t : DBTransportModality) =
         TransportModality(t.transportModalityId,t.transportModalityName)
@@ -170,49 +170,49 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
     } yield (region)
   }
   
-  object place {
-    val cache = new MapCache[String,Place] {
+  object city {
+    val cache = new MapCache[String,City] {
       override def buildMap()(implicit ec : ExecutionContext) = for {            
-        dbPlaceSeq <- slickPlaces            
-            .map(r => (r.placeId, r))
+        dbCitySeq <- slickCities            
+            .map(r => (r.cityId, r))
             .result
-        dbPlaceMap = dbPlaceSeq.toMap
+        dbCityMap = dbCitySeq.toMap
         regionCache <- region.cache()
-        dbPlaceRegionSeq <- slickPlaceRegions.map(x => (x.placeId, x.regionId)).result
-        dbPlaceRegionMap = 
-            groupedMap(dbPlaceRegionSeq).mapValues(
+        dbCityRegionSeq <- slickCityRegions.map(x => (x.cityId, x.regionId)).result
+        dbCityRegionMap = 
+            groupedMap(dbCityRegionSeq).mapValues(
                 _.map(regionCache).to[Set]).withDefault(_ => Set[Region]())      
-        places = dbPlaceMap.map {
-            case (placeId,dbPlace) => 
-               (placeId, dbPlaceToPlace(dbPlace)
-                         .copy(regions = dbPlaceRegionMap(placeId)))
+        cities = dbCityMap.map {
+            case (cityId,dbCity) => 
+               (cityId, dbCityToCity(dbCity)
+                         .copy(regions = dbCityRegionMap(cityId)))
         }                          
-      } yield (places)      
+      } yield (cities)      
     }            
     
-    def fill(placeIds : Set[String])(implicit ec : ExecutionContext) : DBIO[Map[String,Place]] = for {
-      placeCache <- cache()        
-    } yield (placeCache.filterKeys(placeIds))
+    def fill(cityIds : Set[String])(implicit ec : ExecutionContext) : DBIO[Map[String,City]] = for {
+      cityCache <- cache()        
+    } yield (cityCache.filterKeys(cityIds))
     
-    def find(placeId : PlaceId)(implicit ec : ExecutionContext) : DBIO[Option[Place]]= for {
-      placeCache <- cache()
-    } yield (placeCache.get(placeId))        
+    def find(cityId : CityId)(implicit ec : ExecutionContext) : DBIO[Option[City]]= for {
+      cityCache <- cache()
+    } yield (cityCache.get(cityId))        
     
-    def exists(placeId : PlaceId)(implicit ec : ExecutionContext) : DBIO[Boolean] = 
-      find(placeId).map(_.isDefined)
+    def exists(cityId : CityId)(implicit ec : ExecutionContext) : DBIO[Boolean] = 
+      find(cityId).map(_.isDefined)
               
-    def save(place : Place)(implicit ec : ExecutionContext) : DBIO[Place] = for {
-      placeExists <- exists(place.placeId)
-      _ <- if (placeExists) { for {
-               _ <-  slickPlaces.filter(_.placeId === place.placeId).update(place)
-               _ <-  slickPlaceRegions.filter(_.placeId === place.placeId).delete
+    def save(city : City)(implicit ec : ExecutionContext) : DBIO[City] = for {
+      cityExists <- exists(city.cityId)
+      _ <- if (cityExists) { for {
+               _ <-  slickCities.filter(_.cityId === city.cityId).update(city)
+               _ <-  slickCityRegions.filter(_.cityId === city.cityId).delete
              } yield (())               
            } else {
-             slickPlaces += place
+             slickCities += city
            }        
-      _ <- slickPlaceRegions ++= place.regions.toSeq.map(r => DBPlaceRegion(place.placeId,r.regionId))
+      _ <- slickCityRegions ++= city.regions.toSeq.map(r => DBCityRegion(city.cityId,r.regionId))
       _ <- cache.invalidateCache()
-    } yield (place)          
+    } yield (city)          
   }
   
   object transportModality {
@@ -298,8 +298,8 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
             .filter(_._1.tripId inSet tripIds)   
             .map({case (a,v) => (a.tripId, a.dayNumber, a.order, a, v)})
             result)( 
-          dbVisits => place.fill(dbVisits.map(_.visitPlaceId).toSet))(
-          { case (a,v,placesMap) => Visit(placesMap(v.visitPlaceId),v.visitDescription,a.lengthHours) }) 
+          dbVisits => city.fill(dbVisits.map(_.visitCityId).toSet))(
+          { case (a,v,citiesMap) => Visit(citiesMap(v.visitCityId),v.visitDescription,a.lengthHours) }) 
     
     def tripsToTransports(tripIds : Set[String])(implicit ec : ExecutionContext) : 
             DBIO[TripToActivityMap[Transport]] = 
@@ -311,12 +311,12 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
             .map({case (a,v) => (a.tripId, a.dayNumber, a.order, a, v)})
             result)( 
           dbValues => for {
-            placesMap <- place.fill(dbValues.flatMap(x => Seq(x.fromPlaceId, x.toPlaceId)).toSet)
+            citiesMap <- city.fill(dbValues.flatMap(x => Seq(x.fromCityId, x.toCityId)).toSet)
             modalitiesMap <- transportModality.allModalities 
-          } yield (placesMap,modalitiesMap))(
-          { case (a,v,(placesMap,modalitiesMap)) => Transport(
-                  placesMap(v.fromPlaceId),
-                  placesMap(v.toPlaceId),
+          } yield (citiesMap,modalitiesMap))(
+          { case (a,v,(citiesMap,modalitiesMap)) => Transport(
+                  citiesMap(v.fromCityId),
+                  citiesMap(v.toCityId),
                   modalitiesMap(v.transportModalityId),
                   "",
                   a.lengthHours) })      
@@ -414,7 +414,7 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
       val dbVisitActivities = trip.days.toSeq.flatMap {
         case (dayNum,td) => td.activities.zipWithIndex collect {
           case (v : Visit,order) => 
-            DBVisitActivity(tripId,dayNum,order,v.place.placeId,v.visitDescription)
+            DBVisitActivity(tripId,dayNum,order,v.city.cityId,v.visitDescription)
         }
       }
       val dbTransportActivities = trip.days.toSeq.flatMap {
@@ -422,8 +422,8 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  extend
           case (t : Transport,order) => 
             DBTransportActivity(
                tripId,dayNum,order,
-               t.fromPlace.placeId,
-               t.toPlace.placeId,
+               t.fromCity.cityId,
+               t.toCity.cityId,
                t.transportModality.transportModalityId.toString,
                t.description)
         }
