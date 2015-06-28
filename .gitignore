@@ -32,3 +32,6 @@ build-impl.xml
 /lib/*-sources.jar
 /lib/*-javadoc.jar
 /lib/*.pom
+/.cache-main
+/.environment
+**/Session.vim
