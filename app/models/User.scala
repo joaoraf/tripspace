@@ -20,4 +20,12 @@ case class User(
   lastName: Option[String],
   fullName: Option[String],
   email: Option[String],
-  avatarURL: Option[String]) extends Identity
+  avatarURL: Option[String]) extends Identity {
+  val name = 
+    fullName orElse
+    (lastName map (_ + firstName.map(", " + _).getOrElse(""))) orElse
+    email getOrElse
+    s"${loginInfo.providerKey}:${loginInfo.providerID}"
+  
+  val ref = Ref(userID,name)
+}

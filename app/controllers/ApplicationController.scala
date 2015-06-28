@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject.Inject
-import com.mohiva.play.silhouette.api.{ Environment, LogoutEvent, Silhouette }
+import com.mohiva.play.silhouette.api.{ Environment, LogoutEvent, Silhouette, Logger }
 import com.mohiva.play.silhouette.impl.authenticators.SessionAuthenticator
 import com.mohiva.play.silhouette.api.services._
 import com.mohiva.play.silhouette.api.util._
@@ -36,7 +36,7 @@ class ApplicationController @Inject() (
   socialProviderRegistry: SocialProviderRegistry,
   messagesApi : MessagesApi,
   protected val env: Environment[User, SessionAuthenticator])
-  extends Silhouette[User, SessionAuthenticator] {
+  extends Silhouette[User, SessionAuthenticator] with Logger {
   
   
   /**

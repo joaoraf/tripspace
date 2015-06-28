@@ -2,26 +2,27 @@ package models
 
 import scala.collection.SortedMap
 
-/**
- * The Trip object
- */
-case class Trip(
-    tripId : TripId = java.util.UUID.randomUUID(),
-    user : User,
-    tripName : String = "",
-    tripIsPublic : Boolean = false,
-    days : SortedMap[Int,TripDay],
-    region : Region    
-    ) 
-    
-case class Region(
-    regionId : RegionId,
-    regionName : String,
-    regionDescription : String = "",
-    regionThumbnail : Option[String] = None,
-    superRegions : Set[Region] = Set()
-    )
+case class Ref[T](id : T, name : String = "")
 
+object Ref {
+  val defaultUUID_Ref = Ref(java.util.UUID.randomUUID())
+}
+
+case class Trip(
+    ref : Ref[TripId] = Ref.defaultUUID_Ref,
+    isPublic : Boolean = false,
+    userRef : Ref[UserId],    
+    days : SortedMap[Int,TripDay],
+    regionRef : Ref[RegionId])
+
+case class Region(
+    ref : Ref[RegionId],
+    description : String = "",
+    thumbnail : Option[String] = None,
+    optSuperRegionRef : Option[Ref[RegionId]] = None,
+    setSubRegionRefs : Set[Ref[RegionId]] = Set(),
+    setCityRefs : Set[Ref[CityId]] = Set()
+    )    
     
 case class TripDay (       
     label : Option[String],
@@ -35,27 +36,31 @@ sealed trait Activity {
 case class UndefinedActivity(lengthHours : Int) extends Activity
 
 case class Visit(    
-    place : Place,
-    visitDescription : String,
+    poiRef : Ref[POIId],
+    description : String,
     lengthHours : Int
     ) extends Activity
 
 case class Transport(    
-    fromPlace : Place,
-    toPlace : Place,
-    transportModality : TransportModality,
+    fromCity : Ref[CityId],
+    toCity : Ref[CityId],
+    transportModalityRef : Ref[TransportModalityId],
     description : String,
     lengthHours : Int
     ) extends Activity    
     
 case class TransportModality(
-    transportModalityId : TransportModalityId,
-    transportModalityName : String
+    ref : Ref[TransportModalityId]
     )
 
-case class Place(
-    placeId : PlaceId,
-    placeName : String,
-    placeDescription : String,
-    regions : Set[Region] = Set()
-    )    
+case class City(
+    ref : Ref[CityId],
+    description : String,
+    regionRef : Ref[RegionId],
+    poiRefs : Set[Ref[POIId]] = Set()
+    ) 
+
+case class POI(
+    ref : Ref[POIId],    
+    description : String,
+    cityRef : Ref[CityId])    

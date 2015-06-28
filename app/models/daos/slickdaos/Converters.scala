@@ -2,5 +2,5 @@ package models.daos.slickdaos
 
 import models.Visit
 import models.TransportModality
-import models.Place
+import models.City
 

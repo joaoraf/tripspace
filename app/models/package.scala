@@ -11,6 +11,7 @@ package object models {
   type TransportId = UniqueId
   
   type TransportModalityId = ResourceId
-  type PlaceId = ResourceId
+  type CityId = ResourceId
   type RegionId = ResourceId
+  type POIId = ResourceId
 }

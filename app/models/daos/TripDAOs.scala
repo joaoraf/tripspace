@@ -14,12 +14,12 @@ trait RegionDAO {
   def save(region : Region)(implicit ec : ExecutionContext) : Future[Region]    
 }
 
-trait PlaceDAO {
-  def find(placeId : PlaceId)(implicit ec : ExecutionContext) : Future[Option[Place]]
+trait CityDAO {
+  def find(cityId : CityId)(implicit ec : ExecutionContext) : Future[Option[City]]
   
-  def exists(placeId : PlaceId)(implicit ec : ExecutionContext) : Future[Boolean]
+  def exists(cityId : CityId)(implicit ec : ExecutionContext) : Future[Boolean]
       
-  def save(place : Place)(implicit ec : ExecutionContext) : Future[Place]
+  def save(city : City)(implicit ec : ExecutionContext) : Future[City]
 }
 
 trait TripDAO {
@@ -59,7 +59,7 @@ trait VisitDAO {
   
   def exists(visitId : VisitId)(implicit ec : ExecutionContext) : Future[Boolean]
   
-  def findByPlace(placeId : PlaceId)(implicit ec : ExecutionContext) : Future[Seq[Visit]]
+  def findByCity(cityId : CityId)(implicit ec : ExecutionContext) : Future[Seq[Visit]]
   
   def findByRegion(regionId : RegionId)(implicit ec : ExecutionContext) : Future[Seq[Visit]]
   
@@ -71,8 +71,8 @@ trait TransportDAO {
   
   def exists(transportId : TransportId)(implicit ec : ExecutionContext) : Future[Boolean]
   
-  def findFromToPlace(fromPlaceId : Option[PlaceId] = None,
-                      toPlaceId : Option[PlaceId] = None)
+  def findFromToCity(fromCityId : Option[CityId] = None,
+                      toCityId : Option[CityId] = None)
                     (implicit ec : ExecutionContext) : Future[Seq[Transport]]
   
   def save(transport : Transport)(implicit ec : ExecutionContext) : Future[Transport]
