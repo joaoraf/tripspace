@@ -1,12 +1,12 @@
 package models.daos.slickdaos
 
 import slick.driver.PostgresDriver.api._
+import scala.language.postfixOps
 
 
 import ForeignKeyAction._
 
-trait TripspaceDBTableDefinitions {
-    self : SilhoutteDBTableDefinitions =>
+trait TripspaceDBTableDefinitions {    
     import models.daos.slickdaos.dbobjs._  
       
             
@@ -17,8 +17,8 @@ trait TripspaceDBTableDefinitions {
       def userId = column[String]("user_id")
       def regionId = column[String]("region_id")
       
-      foreignKey("fk_trip_user", userId, self.slickUsers)(_.id, Cascade,Restrict)
-      foreignKey("fk_trip_region", tripId, self.slickRegions)(_.regionId, Cascade,Restrict)
+      foreignKey("fk_trip_user", userId, slickUsers)(_.id, Cascade,Restrict)
+      foreignKey("fk_trip_region", tripId, slickRegions)(_.regionId, Cascade,Restrict)
       
       def * = (tripId,tripName,tripIsPublic,userId,regionId) <> (DBTrip.tupled,DBTrip.unapply)
     }
@@ -30,32 +30,22 @@ trait TripspaceDBTableDefinitions {
       def regionName = column[String]("region_name", O.Default(""))
       def regionDescription = column[String]("region_description", O.Default(""))
       def regionThumbnail = column[Option[String]]("region_thumbnail")
+      def superRegionId = column[Option[String]]("super_region_id", O.Default(None))
       
-      def * = (regionId, regionName, regionDescription, regionThumbnail) <> (DBRegion.tupled, DBRegion.unapply)
+      foreignKey("fk_region_super_region", superRegionId,slickRegions)(_.regionId.?,Cascade,Cascade)
+      
+      def * = (regionId, regionName, regionDescription, regionThumbnail, superRegionId) <> (DBRegion.tupled, DBRegion.unapply)
     }    
     
     val slickRegions = TableQuery[Regions]
-    
-    class RegionSubRegions(tag : Tag) extends Table[DBRegionSubRegion](tag, "region_sub_region") {
-      def superRegionId = column[String]("super_region_id")
-      def subRegionId = column[String]("sub_region_id")
-      
-      primaryKey("pk_region_sub_region", (superRegionId,subRegionId))
-      foreignKey("fk_region_sub_region_super", superRegionId, self.slickRegions)(_.regionId, Cascade,Cascade)
-      foreignKey("fk_region_sub_region_sub", subRegionId, self.slickRegions)(_.regionId, Cascade,Cascade)
-      
-      def * = (superRegionId, subRegionId) <> (DBRegionSubRegion.tupled,DBRegionSubRegion.unapply)
-    }
-    
-    val slickRegionSubRegions = TableQuery[RegionSubRegions]   
-    
+     
     class TripDays(tag : Tag) extends Table[DBTripDay](tag, "trip_day") {      
       def tripId = column[String]("trip_id")
       def dayNumber = column[Int]("day_number")
       def label = column[Option[String]]("day_label")
       
       primaryKey("fk_day", (tripId, dayNumber))
-      foreignKey("fk_trip_days_trip", tripId, self.slickTrips)(_.tripId, Cascade,Cascade)
+      foreignKey("fk_trip_days_trip", tripId, slickTrips)(_.tripId, Cascade,Cascade)
       index("fk_trip_days_unique_day_number", (tripId,dayNumber), true)
       
       def * = (tripId, dayNumber, label) <> (DBTripDay.tupled, DBTripDay.unapply)
@@ -77,7 +67,7 @@ trait TripspaceDBTableDefinitions {
       def order = column[Int]("activity_order")
       def lengthHours = column[Int]("length_hours")
       
-      foreignKey("fk_activity_trip_day", (tripId,dayNumber), self.slickTripDays)(x => (x.tripId, x.dayNumber), Cascade,Cascade)
+      foreignKey("fk_activity_trip_day", (tripId,dayNumber), slickTripDays)(x => (x.tripId, x.dayNumber), Cascade,Cascade)
       primaryKey("pk_activity", (tripId,dayNumber,order))
       
       def * = (tripId,dayNumber,order,lengthHours) <> (DBActivity.tupled, DBActivity.unapply)
@@ -89,15 +79,15 @@ trait TripspaceDBTableDefinitions {
       def tripId = column[String]("trip_id")
       def dayNumber = column[Int]("day_number")
       def order = column[Int]("activity_order")
-      def visitCityId = column[String]("visitCityId")
+      def visitPOIId = column[String]("visitPOIId")
       def visitDescription = column[String]("visit_description", O.Default(""))      
       
       foreignKey("fk_visit_activity_day", (tripId,dayNumber,order), slickActivities)(x => (x.tripId, x.dayNumber, x.order), Cascade,Cascade)
-      foreignKey("fk_visit_activity_city", visitCityId, slickCities)(_.cityId,Cascade,Restrict)
+      foreignKey("fk_visit_activity_city", visitPOIId, slickPointsOfInterest)(_.poiId,Cascade,Cascade)
       
       primaryKey("pk_visit_activity", (tripId,dayNumber,order))                  
       
-      def * = (tripId,dayNumber,order,visitCityId,visitDescription) <> (DBVisitActivity.tupled, DBVisitActivity.unapply)
+      def * = (tripId,dayNumber,order,visitPOIId,visitDescription) <> (DBVisitActivity.tupled, DBVisitActivity.unapply)
     }
     
     val slickVisitActivities : BaseActivityTableQuery[VisitActivity] = TableQuery[VisitActivity]
@@ -111,9 +101,9 @@ trait TripspaceDBTableDefinitions {
       def toCityId = column[String]("toCityId")
       def transportModalityId = column[String]("transport_modality_id")
       def transportDescription = column[String]("transport_description", O.Default(""))
-      foreignKey("fk_transport_activity_from_city", fromCityId, slickCities)(_.cityId,Cascade,Restrict)
-      foreignKey("fk_transport_activity_to_city", toCityId, slickCities)(_.cityId,Cascade,Restrict)
-      foreignKey("fk_transport_activity_modality", transportModalityId, transportModalities)(_.transportModalityId,Cascade,Restrict)
+      foreignKey("fk_transport_activity_from_city", fromCityId, slickCities)(_.cityId,Cascade,Cascade)
+      foreignKey("fk_transport_activity_to_city", toCityId, slickCities)(_.cityId,Cascade,Cascade)
+      foreignKey("fk_transport_activity_modality", transportModalityId, transportModalities)(_.transportModalityId,Cascade,Cascade)
             
       foreignKey("fk_transport_activity_day", (tripId,dayNumber,order), slickActivities)(x => (x.tripId, x.dayNumber, x.order), Cascade,Cascade)      
       
@@ -128,24 +118,14 @@ trait TripspaceDBTableDefinitions {
       def cityId = column[String]("cityId", O.PrimaryKey)
       def cityName = column[String]("cityName")
       def cityDescription = column[String]("cityDescription", O.Default(""))
+      def regionId = column[String]("region_id")
       
-      def * = (cityId,cityName,cityDescription) <> (DBCity.tupled,DBCity.unapply)
+      foreignKey("fk_city_region", regionId, slickRegions)(_.regionId,Cascade,Cascade)
+      
+      def * = (cityId,cityName,cityDescription,regionId) <> (DBCity.tupled,DBCity.unapply)
     }
     
     val slickCities = TableQuery[Cities]
-    
-    class CityRegions(tag : Tag) extends Table[DBCityRegion](tag,"city_region") {
-      def cityId = column[String]("cityId")
-      def regionId = column[String]("region_id")
-            
-      primaryKey("pk_city_regions", (cityId,regionId))      
-      foreignKey("fk_user_cities_city", cityId, self.slickCities)(_.cityId, Cascade,Cascade)
-      foreignKey("fk_user_cities_region", cityId, self.slickRegions)(_.regionId, Cascade,Cascade)
-      
-      def * = (cityId,regionId) <> (DBCityRegion.tupled, DBCityRegion.unapply)
-    }
-    
-    val slickCityRegions = TableQuery[CityRegions]
     
     class PointsOfInterest(tag : Tag) extends Table[DBPOI](tag,"poi") {
       def poiId = column[String]("poiId", O.PrimaryKey)
@@ -153,7 +133,7 @@ trait TripspaceDBTableDefinitions {
       def poiDescription = column[String]("poiDescription", O.Default(""))
       def cityId = column[String]("cityId")
       
-      foreignKey("fk_poi_city", cityId, self.slickCities)(_.cityId,Cascade,Restrict)
+      foreignKey("fk_poi_city", cityId, slickCities)(_.cityId,Cascade,Cascade)
       
       def * = (poiId, poiName, poiDescription, cityId) <> (DBPOI.tupled,DBPOI.unapply)
     }
@@ -170,8 +150,114 @@ trait TripspaceDBTableDefinitions {
     val transportModalities = TableQuery[TransportModalities]
     
     
-    val tripTables = Seq(
-        transportModalities, slickRegions, slickCities, slickCityRegions, 
+    
+    /*
+     * Silhouette tables
+     */
+        
+    case class DBUser (
+      userID: String,
+      firstName: Option[String],
+      lastName: Option[String],
+      fullName: Option[String],
+      email: Option[String],
+      avatarURL: Option[String]
+    )
+  
+    class Users(tag: Tag) extends Table[DBUser](tag, "user") {
+      def id = column[String]("userID", O.PrimaryKey)
+      def firstName = column[Option[String]]("firstName")
+      def lastName = column[Option[String]]("lastName")
+      def fullName = column[Option[String]]("fullName")
+      def email = column[Option[String]]("email")
+      def avatarURL = column[Option[String]]("avatarURL")
+      def * = (id, firstName, lastName, fullName, email, avatarURL) <> (DBUser.tupled, DBUser.unapply)
+    }
+  
+    case class DBLoginInfo (
+      id: Option[Long],
+      providerID: String,
+      providerKey: String
+    )
+  
+    class LoginInfos(tag: Tag) extends Table[DBLoginInfo](tag, "logininfo") {
+      def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+      def providerID = column[String]("providerID")
+      def providerKey = column[String]("providerKey")
+      def * = (id.?, providerID, providerKey) <> (DBLoginInfo.tupled, DBLoginInfo.unapply)
+    }
+  
+    case class DBUserLoginInfo (
+      userID: String,
+      loginInfoId: Long
+    )
+  
+    class UserLoginInfos(tag: Tag) extends Table[DBUserLoginInfo](tag, "userlogininfo") {
+      def userID = column[String]("userID")
+      def loginInfoId = column[Long]("loginInfoId")
+      def * = (userID, loginInfoId) <> (DBUserLoginInfo.tupled, DBUserLoginInfo.unapply)
+    }
+  
+    case class DBPasswordInfo (
+      hasher: String,
+      password: String,
+      salt: Option[String],
+      loginInfoId: Long
+    )
+  
+    class PasswordInfos(tag: Tag) extends Table[DBPasswordInfo](tag, "passwordinfo") {
+      def hasher = column[String]("hasher")
+      def password = column[String]("password")
+      def salt = column[Option[String]]("salt")
+      def loginInfoId = column[Long]("loginInfoId")
+      def * = (hasher, password, salt, loginInfoId) <> (DBPasswordInfo.tupled, DBPasswordInfo.unapply)
+    }
+  
+    case class DBOAuth1Info (
+      id: Option[Long],
+      token: String,
+      secret: String,
+      loginInfoId: Long
+    )
+  
+    class OAuth1Infos(tag: Tag) extends Table[DBOAuth1Info](tag, "oauth1info") {
+      def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+      def token = column[String]("token")
+      def secret = column[String]("secret")
+      def loginInfoId = column[Long]("loginInfoId")
+      def * = (id.?, token, secret, loginInfoId) <> (DBOAuth1Info.tupled, DBOAuth1Info.unapply)
+    }
+  
+    case class DBOAuth2Info (
+      id: Option[Long],
+      accessToken: String,
+      tokenType: Option[String],
+      expiresIn: Option[Int],
+      refreshToken: Option[String],
+      loginInfoId: Long
+    )
+  
+    class OAuth2Infos(tag: Tag) extends Table[DBOAuth2Info](tag, "oauth2info") {
+      def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+      def accessToken = column[String]("accesstoken")
+      def tokenType = column[Option[String]]("tokentype")
+      def expiresIn = column[Option[Int]]("expiresin")
+      def refreshToken = column[Option[String]]("refreshtoken")
+      def loginInfoId = column[Long]("logininfoid")
+      def * = (id.?, accessToken, tokenType, expiresIn, refreshToken, loginInfoId) <> (DBOAuth2Info.tupled, DBOAuth2Info.unapply)
+    }
+  
+    val slickUsers = TableQuery[Users]
+    val slickLoginInfos = TableQuery[LoginInfos]
+    val slickUserLoginInfos = TableQuery[UserLoginInfos]
+    val slickPasswordInfos = TableQuery[PasswordInfos]
+    val slickOAuth1Infos = TableQuery[OAuth1Infos]
+    val slickOAuth2Infos = TableQuery[OAuth2Infos]
+  
+    
+    val allTables = Seq(
+        slickUsers,slickLoginInfos,slickUserLoginInfos,slickPasswordInfos,
+        slickOAuth1Infos, slickOAuth2Infos, transportModalities, slickRegions, slickCities, 
         slickTrips, slickTripDays, slickActivities, slickVisitActivities, 
-        slickTransportActivities, slickRegionSubRegions)
+        slickTransportActivities, slickPointsOfInterest)
 }

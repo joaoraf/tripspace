@@ -40,4 +40,5 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.7.2")
 
 //addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.0.0")
 
+addSbtPlugin("com.dscleaver.sbt" % "sbt-quickfix" % "0.4.1")
 

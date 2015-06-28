@@ -4,5 +4,4 @@ import slick.driver.PostgresDriver.simple._
 
 
 
-object DBTableDefinitions extends SilhoutteDBTableDefinitions 
-                          with TripspaceDBTableDefinitions
+object DBTableDefinitions extends TripspaceDBTableDefinitions

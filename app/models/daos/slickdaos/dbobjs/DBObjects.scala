@@ -54,11 +54,7 @@ case class DBTransportModality(
 case class DBCity(
     cityId : String,
     cityName : String,
-    cityDescription : String
-    )
-
-case class DBCityRegion(
-    cityId : String,
+    cityDescription : String,
     regionId : String
     )
 
@@ -72,10 +68,7 @@ case class DBRegion(
     regionId : String,
     regionName : String,
     regionDescription : String,
-    regionThumbnail : Option[String]
+    regionThumbnail : Option[String],
+    superRegionId : Option[String]
     )
     
-case class DBRegionSubRegion(
-    superRegionId : String,
-    subRegionId : String
-        )
