@@ -27,6 +27,10 @@ import play.api.Play.current
 import com.mohiva.play.silhouette.impl.repositories.DelegableAuthInfoRepository
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import play.api.i18n.MessagesApi
+import models.services.impl.TripServiceImpl
+import models.services.TripService
+import models.services.impl.SearchServiceImpl
+import models.services.SearchService
 
 /**
  * The Guice module which wires all Tripspace dependencies.
@@ -50,8 +54,13 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
     bind[PasswordHasher].toInstance(new BCryptPasswordHasher)
     bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
     bind[EventBus].toInstance(EventBus())
-  }
-
+    bind[TripDAO].to[TripSlickDAO]
+    bind[FeatureDAO].to[FeatureSlickDAO]
+    
+    bind[TripService].to[TripServiceImpl]
+    bind[SearchService].to[SearchServiceImpl]
+  }     
+  
   /**
    * Provides the Silhouette environment.
    *

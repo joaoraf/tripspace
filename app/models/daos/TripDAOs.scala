@@ -5,21 +5,14 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
 
+trait FeatureDAO {
+  /*def find(featureId : FeatureId)(implicit ec : ExecutionContext) : Future[Option[Feature]]
 
-trait RegionDAO {
-  def find(regionId : RegionId)(implicit ec : ExecutionContext) : Future[Option[Region]]
+  def exists(featureId : FeatureId)(implicit ec : ExecutionContext) : Future[Boolean]
   
-  def exists(regionId : RegionId)(implicit ec : ExecutionContext) : Future[Boolean]
+  def findAll(ids : Set[FeatureId])(implicit ec : ExecutionContext) : Future[Map[FeatureId,Feature]] */
   
-  def save(region : Region)(implicit ec : ExecutionContext) : Future[Region]    
-}
-
-trait CityDAO {
-  def find(cityId : CityId)(implicit ec : ExecutionContext) : Future[Option[City]]
-  
-  def exists(cityId : CityId)(implicit ec : ExecutionContext) : Future[Boolean]
-      
-  def save(city : City)(implicit ec : ExecutionContext) : Future[City]
+  def findRefsByTypeName(featureType : FeatureType, namePart : String)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]]
 }
 
 trait TripDAO {

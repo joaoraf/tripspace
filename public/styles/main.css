@@ -92,3 +92,24 @@ a {
 .btn-lg {
     font-size: 18px;
 }
+
+#searchInputBox {
+	width: 70%;
+}
+
+.selectize-control.region-search .selectize-dropdown > div {
+			border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.selectize-control.region-search.loading::before {
+	opacity: 0.4;
+}
+.selectize-dropdown.region-search {
+	border: 1pm solid black;
+}
+
+@-moz-document url-prefix() {
+  fieldset { display: table-cell; }
+}
+dd.info {
+	display: none;
+}

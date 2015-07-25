@@ -14,4 +14,6 @@ package object models {
   type CityId = ResourceId
   type RegionId = ResourceId
   type POIId = ResourceId
+  
+  type FeatureId = Int
 }

@@ -1,7 +1,7 @@
 package models.daos.slickdaos
 
 import java.util.UUID
-
+import scala.collection.breakOut
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.language.implicitConversions
@@ -30,22 +30,13 @@ import akka.agent.Agent
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.Logger
 import slick.lifted.AbstractTable
+import java.net.URL
 
 
  
 class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
   import dbobjs._
-  object Implicits {
-   /* implicit def dbRegionToRegion(dbRegion : DBRegion) : Region = 
-      Region(dbRegion.regionId, dbRegion.regionName,
-           dbRegion.regionDescription, dbRegion.regionThumbnail) */
-           
-    implicit def regionToDbRegion(region : Region) : DBRegion = 
-      DBRegion(region.ref.id, region.ref.name,
-             region.description, region.thumbnail, region.optSuperRegionRef.map(_.id))
-             
-    implicit def cityToDBCity(city : City) : DBCity = 
-      DBCity(city.ref.id,city.ref.name,city.description,city.regionRef.id)
+  object Implicits {    
       
     implicit def dbTranspModToDomain(t : DBTransportModality) =
         TransportModality(Ref(t.transportModalityId,t.transportModalityName))
@@ -64,133 +55,78 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
   def exists_[T <: AbstractTable[_], R <: Rep[_]](table : TableQuery[T])(f: T => R)(implicit wt: CanBeQueryCondition[R]) = 
       table.filter(f).exists.result
     
-  object region {          
-    def makeRef(dbRegion : DBRegion) : Ref[RegionId] = Ref(dbRegion.regionId, dbRegion.regionName) 
-                
-    def toRegion(dbRegion : DBRegion, optSuperRegionRef : Option[Ref[RegionId]] = None,
-        setSubRegionRefs : Set[Ref[RegionId]] = Set(),
-        setCityRefs : Set[Ref[CityId]] = Set()) : Region = 
-      Region(makeRef(dbRegion), dbRegion.regionDescription, 
-             dbRegion.regionThumbnail, optSuperRegionRef, setSubRegionRefs,
-             setCityRefs)
-    
-    def fill(ids : Set[String])(implicit ec : ExecutionContext) : DBIO[Map[String,Region]] = for {
-       dbRegions <- (for {
-           (dbRegion,optDbSuperRegion) <- 
-             slickRegions joinLeft slickRegions on {
-               case (r,sr) => r.superRegionId === sr.regionId
-             }
-           if dbRegion.regionId inSet ids 
-         } yield (dbRegion.regionId,(dbRegion,optDbSuperRegion))).result
-       dbRegionMap = dbRegions.toMap.mapValues {
-         case (r,dbsr) => toRegion(r,dbsr.map(r => Ref(r.regionId,r.regionName)))
-       }
-       subRegionSeq <- (for {
-         region <- slickRegions
-         if region.superRegionId inSet ids
-       } yield (
-           (region.superRegionId.get,(region.regionId,region.regionName))
-           )).result
-       subRegionMap = 
-         subRegionSeq
-             .groupBy({case (x,_) => x})
-             .mapValues(_.map { case (_,(id,n)) => Ref(id,n) }.to[Set])
-             .withDefault(_ => Set[Ref[RegionId]]())
-             
-       cityMap <- for {
-         cities <- 
-           slickCities
-             .filter(_.regionId inSet ids)
-             .map(c => (c.regionId,(c.cityId,c.cityName)))            
-             .result
-       } yield (
-           cities.groupBy(_._1)
-                 .mapValues(
-                     _.map(p => Ref(p._2._1,p._2._2))
-                      .to[Set])
-                 .withDefault(_ => Set[Ref[CityId]]()))
-       
-       res = mergeMaps3_F(dbRegionMap, subRegionMap, cityMap) { 
-          case (_,region,subRegions,cities) =>
-            region copy (
-                setSubRegionRefs =subRegions,
-                setCityRefs = cities) 
-       }
-    } yield (res)
-         
-    def find(regionId : RegionId)(implicit ec : ExecutionContext) : DBIO[Option[Region]] = 
-      fill(Set(regionId)).map(_.values.headOption)
-                        
-    def exists(regionId : RegionId)(implicit ec : ExecutionContext) : DBIO[Boolean] =
-      slickRegions.filter(_.regionId === regionId).exists.result
-         
-    def save(region : Region)(implicit ec : ExecutionContext) = for {
-        regionExists <- exists(region.ref.id)
-        _ <- if (regionExists) { for {
-            _ <- slickRegions.filter(_.regionId === region.ref.id).update(region)            
-            _ <- slickRegions
-                    .filter(r => r.superRegionId.get === region.ref.id &&
-                            ! (r.regionId inSet region.setCityRefs.map(_.id))).delete                    
-          } yield ()
-        } else {
-          slickRegions += region
-        }       
-    } yield (region)
-  }
   
-  
-  object city {       
+  object feature {    
+     def makeRef(dbFeature : DBFeature) = Ref(dbFeature.id,dbFeature.name)
     
-    def makeRef(dbCity : DBCity) : Ref[CityId] = Ref(dbCity.cityId,dbCity.cityName)
-    
-    def toCity(dbCity : DBCity, regionRef : Ref[RegionId], poiRefs : Set[Ref[POIId]] = Set()) =
-      City(makeRef(dbCity), dbCity.cityDescription, regionRef, poiRefs)
-    
-    def fill(cityIds : Set[String], deep : Boolean = true)(implicit ec : ExecutionContext) : DBIO[Map[String,City]] = for {
-      dbCities <- (for {
-        city <- slickCities        
-        if city.cityId inSet cityIds
-        region <- slickRegions
-        if region.regionId === city.regionId
-      } yield (city.cityId, (city,(region.regionId,region.regionName)))).result
-      preCityMap = dbCities.toMap.mapValues { case (c,(rid,rn)) => toCity(c,Ref(rid,rn))}
-   
-      poiSeq <- (for {
-          dbPoi <- slickPointsOfInterest
-          if (dbPoi.cityId inSet cityIds)
-        } yield (dbPoi.cityId, (dbPoi.poiId, dbPoi.poiName))).result
-      poiMap = poiSeq.groupBy(_._1).mapValues(
-          _.map { case (_,(id,n)) => Ref(id,n) }.to[Set])                 
-      cityMap = mergeMaps2_F(preCityMap, poiMap) {
-        case (_,city,ps) => city copy (poiRefs = ps)
-      }
-    } yield (cityMap)
-    
-    def find(cityId : CityId)(implicit ec : ExecutionContext) : DBIO[Option[City]]= 
-      fill(Set(cityId)).map(_.values.headOption)
-    
-    def exists(cityId : CityId)(implicit ec : ExecutionContext) : DBIO[Boolean] = 
-      slickCities.filter(_.cityId === cityId).exists.result
-              
-    def save(city : City)(implicit ec : ExecutionContext) : DBIO[City] = for {
-      cityExists <- exists(city.ref.id)
-      _ <- if (cityExists) { for {
-             _ <- slickCities.filter(_.cityId === city.ref.id).update(city)
-             _ <- slickPointsOfInterest.filter( 
-                 p => p.cityId === city.ref.id &&
-                      !(p.poiId inSet city.poiRefs.map(_.id).toSet)).delete
-             } yield (())               
-           } else {
-             slickCities += city
-           }        
-    } yield (city)          
+     def find(featureId : FeatureId)(implicit ec : ExecutionContext) : DBIO[Option[Feature]] = 
+       findAll(Set(featureId)).map(_.values.headOption)
+
+     def exists(featureId : FeatureId)(implicit ec : ExecutionContext) : DBIO[Boolean] = {
+       features.filter(_.id === featureId).exists.result
+     }  
+     
+     def fillRefs(ids : Seq[FeatureId])(implicit ec: ExecutionContext) : DBIO[Map[FeatureId,Ref[FeatureId]]] = {
+       features.filter(_.id inSet ids).map(f => (f.id,f.name)).result
+               .map(_.map({ case (id,name) => (id,Ref(id,name)) })(breakOut))
+     } 
+     
+     def fillRef(id : FeatureId)(implicit ec: ExecutionContext) : DBIO[Option[Ref[FeatureId]]] = {
+         features.filter(_.id === id)
+                 .map(f => f.name)
+                 .result
+                 .headOption
+                 .map(_.map(name => Ref(id,name)))
+     }
+     
+     def findAll(ids : Set[FeatureId])(implicit ec : ExecutionContext) : DBIO[Map[FeatureId,Feature]] = {
+       for {
+         dbFeatures <- features.filter(_.id inSet ids).result
+         parentFeatureMap <- featureHierarchies
+                               .join(features)
+                               .on({case (h,f) => h.topId === f.id})
+                               .filter(_._1.botId inSet ids)
+                               .map(r => (r._1.botId,(r._2.id,r._2.name)))                              
+                               .result
+                               .map(_.groupBy(_._1)
+                                     .mapValues(_.map({case (_,(id,name)) => Ref(id,name)}).to[Set])
+                                     .withDefaultValue(Set()))      
+         childFeatureMap <- featureHierarchies
+                               .join(features)
+                               .on({case (h,f) => h.botId === f.id})
+                               .filter(_._1.topId inSet ids)
+                               .map(r => (r._1.topId,(r._2.id,r._2.name)))                              
+                               .result
+                               .map(_.groupBy(_._1)
+                                     .mapValues(_.map({case (_,(id,name)) => Ref(id,name)}).to[Set])
+                                     .withDefaultValue(Set()))
+         features = dbFeatures.map { dbf =>
+             (dbf.id,Feature(
+               Ref(dbf.id,dbf.name),
+               featureType = FeatureType(dbf.featureType),
+               latitude = dbf.latitude,
+               longitude = dbf.longitude,
+               countryId = dbf.countryId,
+               dbPediaResource = dbf.dbpediaResource.map(DBPediaResource),
+               wikipediaResource = dbf.wikipediaResource.map(WikipediaResource),
+               imageUrl = dbf.imageUrl.map(new URL(_)),
+               thumbnailUrl = dbf.thumbnailUrl.map(new URL(_)),
+               description = dbf.description,
+               superFeatureIds = parentFeatureMap(dbf.id),
+               subFeatureIds = childFeatureMap(dbf.id)
+             ))
+           }.toMap
+       } yield (features)
+     }
+     
+     def findRefsByTypeName(featureType : FeatureType,namePart : String)(implicit ec : ExecutionContext) : DBIO[Seq[Ref[FeatureId]]] = {
+       val query = namePart
+       val q1 = sql"""select id,name from feature where feature_type = ${featureType.typeSymbol.toString} and trigrams_vector(name) @@ trigrams_query(${query.trim}) 
+                        order by levenshtein(${namePart},name) limit 20""".as[(Int,String)]
+       q1.map(_.map({case (id,name) => Ref(id,name)}))
+     }
   }
-  
-  object poi {
-    def toPOI(dbPOI : DBPOI, city : City) : POI = ???
-    def makeRef(dbPOI : DBPOI) : Ref[POIId] = Ref(dbPOI.poiId,dbPOI.poiName)
-  }
-   
+      
   object transportModality {
     def makeRef(dbTM : DBTransportModality) : Ref[TransportModalityId] = ???
     
@@ -220,7 +156,7 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
   object trip {                             
     def makeRef(dbTrip : DBTrip) : Ref[TripId] = Ref(UUID.fromString(dbTrip.tripId),dbTrip.tripName) 
     
-    def tripsToRegions(tripIds : Set[String])(implicit ec : ExecutionContext) : DBIO[Map[String,Region]] = for {
+    def tripsToRegions(tripIds : Set[String])(implicit ec : ExecutionContext) : DBIO[Map[String,Feature]] = for {
       tripRegionPairs <- (for {
         tr <- slickTrips
         if tr.tripId inSet tripIds
@@ -228,9 +164,9 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
       } yield (r)).result
                      
       regionIds = tripRegionPairs.map(_._2).toSet
-      regions <- region.fill(regionIds)
+      regions <- feature.findAll(regionIds)
       tripRegions = tripRegionPairs map { case(tripId,regionId) => (tripId,regions(regionId))} toMap
-    } yield (tripRegions)
+    } yield (tripRegions) 
     
     def tripsToUsers(tripIds : Set[String])(implicit ec : ExecutionContext) : DBIO[Map[String,User]] = for {
       tripUserPairs <- (for {
@@ -266,11 +202,11 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
             .join(slickVisitActivities)
             .on({case (x,y) => x.tripId === y.tripId && x.dayNumber === y.dayNumber && x.order === y.order})
             .filter(_._1.tripId inSet tripIds)
-            .join(slickPointsOfInterest)
-            .on({case ((_,v),p) => v.visitPOIId === p.poiId})
+            .join(features)
+            .on({case ((_,v),p) => v.visitPOIId === p.id})
             .map({case ((a,v),p) => (a.tripId, a.dayNumber, a.order, a, (v, p))})
             result)(
-          { case (a,(v,p)) => Visit(poi.makeRef(p),v.visitDescription,a.lengthHours) }) 
+          { case (a,(v,p)) => Visit(feature.makeRef(p),v.visitDescription,a.lengthHours) }) 
     
     def tripsToTransports(tripIds : Set[String])(implicit ec : ExecutionContext) : 
             DBIO[TripToActivityMap[Transport]] = 
@@ -279,17 +215,17 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
             .join(slickTransportActivities)
             .on({case (x,y) => x.tripId === y.tripId && x.dayNumber === y.dayNumber && x.order === y.order})
             .filter(_._1.tripId inSet tripIds)   
-            .join(slickCities)
-            .on({case ((_,t),c) => t.fromCityId === c.cityId})
-            .join(slickCities)
-            .on({case (((_,t),_),c) => t.toCityId === c.cityId})
+            .join(features)
+            .on({case ((_,t),c) => t.fromCityId === c.id})
+            .join(features)
+            .on({case (((_,t),_),c) => t.toCityId === c.id})
             .join(transportModalities)
             .on({case ((((_,t),_),_),m) => t.transportModalityId === m.transportModalityId})
             .map({case ((((a,t),fc),tc),m) => (a.tripId, a.dayNumber, a.order, a, (t,fc,tc,m))})
             result)(
           { case (dbActivity,(dbTransport,dbFromCity,dbToCity,dbTranspModality)) => Transport(
-                  city.makeRef(dbFromCity),
-                  city.makeRef(dbToCity),
+                  feature.makeRef(dbFromCity),
+                  feature.makeRef(dbToCity),
                   transportModality.makeRef(dbTranspModality),
                   dbTransport.transportDescription,
                   dbActivity.lengthHours) })      
@@ -307,8 +243,15 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
                         groupedMap(_).mapValues(
                             groupedMap1(_)))
       mergedMaps = mergeMaps3_F(visits,transports,allActivities) { case (tripId,x,y,z) =>
-        mergeMaps3_F(x,y,z) { case (dayNum,visitMap,transpMap,actMap) =>
-          mergeMaps3_1(visitMap,transpMap,actMap) 
+        mergeMaps3_F(
+          x.getOrElse(Map()),
+          y.getOrElse(Map()),
+          z.getOrElse(Map())) { 
+            case (_,visitMap,transpMap,actMap) =>
+              mergeMaps3_1(
+                  visitMap.getOrElse(Map()),
+                  transpMap.getOrElse(Map()),
+                  actMap.getOrElse(Map())) 
         }
       } 
     } yield(mergedMaps)
@@ -331,11 +274,12 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
         
     def fillTrips(ids : Set[String])(implicit ec : ExecutionContext) : DBIO[Map[UserId,Trip]] = for {                  
       tripDays <- tripsToTripDayMaps(ids)
+      _ = println(s"fillTrips: ids=${ids}, tripDays=${tripDays}")
       dbTrips <- 
         slickTrips
           .filter(_.tripId inSet ids)
-          .join(slickRegions)
-          .on({case (t,r) => t.regionId === r.regionId})
+          .join(features)
+          .on({case (t,r) => t.regionId === r.id})
           .join(slickUsers)
           .on({case ((t,_),u) => t.userId === u.id})          
           .join(slickUserLoginInfos)
@@ -345,13 +289,17 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
           .result
           .map(_.map({case ((((t,r),u),_),li) => (t.tripId,(t,r,u,li))})).map(_.toMap)
       tripMap = mergeMaps2_F(dbTrips,tripDays) {
-        case (tripId, (dbTrip,dbRegion,dbUser,dbLoginInfo), days) => Trip(
-              makeRef(dbTrip),
+        case (tripId, Some((dbTrip,dbRegion,dbUser,dbLoginInfo)), odays) => 
+           println(s"fillTrips: odays=${odays}")
+           Trip(
+              makeRef(dbTrip),              
+              description = dbTrip.tripDescription,
               userRef = user.makeRef(dbUser,dbLoginInfo),              
               isPublic = dbTrip.tripIsPublic,
-              days = days,
-              regionRef = region.makeRef(dbRegion)
+              days = odays.getOrElse(SortedMap()),
+              regionRef = feature.makeRef(dbRegion)
             )
+        case (tripId,tripData,days) => throw new RuntimeException(s"Unexpected state: tripId=${tripId}, tripData=${tripData}, days=${days}")
       }            
     } yield (tripMap.map { case (k,v) => (UUID.fromString(k),v)})
       
@@ -365,7 +313,7 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
                            .getOrElse(base)
       for {
         ids <- withUser.to[Set].result
-        tm <- fillTrips(ids)                           
+        tm <- fillTrips(ids.filter(_ == tripId.toString))                           
       } yield (tm.values.headOption)        
     }
   
@@ -381,24 +329,31 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
     }
   
     def save(trip : Trip, userId : Option[UserId] = None)(implicit ec : ExecutionContext) : DBIO[Trip] = {
+      println("-----------")
+      println(s"save: trip: ${trip}, userId: ${userId}")
       val tripId = trip.ref.id.toString
       val dbTrip = DBTrip(
-          tripId,trip.ref.name,trip.isPublic,
+          tripId,trip.ref.name,trip.description,
+          trip.isPublic,
           trip.userRef.id.toString,trip.regionRef.id)
+      println(s"dbTrip: ${dbTrip}")
       val dbTripDays = trip.days.toSeq map {
         case (dayNum,td) => DBTripDay(tripId,dayNum,td.label)          
       }
+      println(s"dbTripDays: ${dbTripDays}")
       val dbActivities = trip.days.toSeq.flatMap {
         case (dayNum,td) => td.activities.zipWithIndex map {
           case (a,order) => DBActivity(tripId,dayNum,order,a.lengthHours)
         }
       }
+      println(s"dbActivities: ${dbActivities}")
       val dbVisitActivities = trip.days.toSeq.flatMap {
         case (dayNum,td) => td.activities.zipWithIndex collect {
           case (v : Visit,order) => 
             DBVisitActivity(tripId,dayNum,order,v.poiRef.id,v.description)
         }
       }
+      println(s"dbVisitActivities: ${dbVisitActivities}")
       val dbTransportActivities = trip.days.toSeq.flatMap {
         case (dayNum,td) => td.activities.zipWithIndex collect {
           case (t : Transport,order) => 
@@ -410,21 +365,29 @@ class SlickQueries @Inject() (dbConfigProvider : DatabaseConfigProvider)  {
                t.description)
         }
       }                               
+      println(s"dbTransportActivities: ${dbTransportActivities}")
       (for {
          tripExists <- slickTrips
                 .filter(_.tripId === dbTrip.tripId)
                 .exists
                 .result  
          _ <- if(tripExists) {
+           println("trip exists: updating")
            slickTrips.filter(_.tripId === dbTrip.tripId).update(dbTrip)
          } else {
+           println("trip is new: saving")
            slickTrips += dbTrip
          }
          _ <- slickTripDays.filter(_.tripId === dbTrip.tripId).delete
+         _ = println("saving trip days")
          _ <- slickTripDays ++= dbTripDays
+         _ = println("saving activities")
          _ <- slickActivities ++= dbActivities
+         _ = println("saving visits")
          _ <- slickVisitActivities ++= dbVisitActivities
+         _ = println("saving transports")
          _ <- slickTransportActivities ++= dbTransportActivities
+         _ = println("transaction finished")
        } yield (trip)).transactionally
     }     
   }

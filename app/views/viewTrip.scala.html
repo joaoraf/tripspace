@@ -1,0 +1,62 @@
+@(trip : Trip, user : Option[User] = None, editable : Boolean = false)(implicit messages : Messages)
+
+@displayActivity(activity : Activity) = {
+ <td>
+   @activity match {
+     case _ : UndefinedActivity => {
+       <td>(free slot)</td>
+     }
+     case v : Visit => {
+       <td>visit @v.poiRef.name</td>
+     }
+     case t : Transport => {
+       <td>move from @t.fromCity.name to @t.toCity.name by @t.transportModalityRef.name</td>
+     }
+   }
+   </td>
+   <td>@activity.lengthHours @if(activity.lengthHours == 1) { hour } else {  hours }</td>
+   <td>@activity.description</td>
+}
+
+
+@main("View trip", user) {
+  
+  <dl>
+    <dt>Name</dt><dd>@trip.ref.name</dd>
+    <dt>Description</dt><dd>@trip.description</dd>
+    <dt>Region</dt><dd>@trip.regionRef.name</dd>
+    <dt>Status</dt><dd>@if(trip.isPublic) { Public } else { owned by @trip.userRef.name }</dd>
+  </dl>
+  @if(trip.days.isEmpty) {
+    <p>Scheduled not defined yet!</p>
+  } else {
+    <table class="table table-responsive table-hover ">
+		<thead>
+		  <tr><th>#</th><th>Day</th><th colspan="4" class="text-center">Activities</th></tr>
+		</thead>
+		<tbody>
+    
+    	@for((dayNum,day) <- trip.days) {
+        <tr>
+          <td rowspan="@(math.min(1,day.activities.length))">@(dayNum+1)</td>
+					<td rowspan="@(math.min(1,day.activities.length))">@day.label</td>
+		  @if(day.activities.isEmpty) {
+			<td></td></tr>
+		  } else {            
+            @displayActivity(day.activities.head)
+            @for(activity <- day.activities.tail) {
+              <tr>@displayActivity(activity)</tr>
+            }
+          }     
+        }  
+        </tbody>
+	  </table>
+  }
+  @if(editable) {
+    <a class="btn btn-default" href="@routes.ApplicationController.editTrip(trip.ref.id.toString)">Edit</a>
+  } else {
+  
+  }
+  
+  
+}

@@ -15,7 +15,7 @@ resolvers += Resolver.sbtPluginRepo("releases")
 resolvers += Resolver.sbtPluginRepo("snapshots")
 
 // Use the Play sbt plugin for Play projects
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.0-RC1")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.0")
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0-RC2")
 

@@ -1,11 +1,12 @@
-package models.daos.slickdaos.dbobjs
+ package models.daos.slickdaos.dbobjs
 
 case class DBTrip(
     tripId : String,        
     tripName : String,
+    tripDescription : String,
     tripIsPublic : Boolean,
     userId : String,
-    regionId : String
+    regionId : Int
     )
                  
                 
@@ -32,7 +33,7 @@ case class DBVisitActivity(
     tripId : String,
     dayNumber : Int,
     order : Int,
-    visitCityId : String,
+    visitCityId : Int,
     visitDescription : String
     )  extends DBBaseActivity
 
@@ -40,8 +41,8 @@ case class DBTransportActivity(
     tripId : String,
     dayNumber : Int,
     order : Int,
-    fromCityId : String,
-    toCityId : String,
+    fromCityId : Int,
+    toCityId : Int,
     transportModalityId : String,
     transportDescription : String
     )  extends DBBaseActivity  
@@ -51,24 +52,20 @@ case class DBTransportModality(
     transportModalityName : String
     )
 
-case class DBCity(
-    cityId : String,
-    cityName : String,
-    cityDescription : String,
-    regionId : String
-    )
-
-case class DBPOI(
-    poiId : String,
-    poiName : String,
-    poiDescription : String,
-    cityId : String)    
+case class DBFeature(
+    id : Int,
+    name : String,
+    latitude : Double,
+    longitude : Double,
+    countryId : Option[Int] = None,
+    dbpediaResource : Option[String] = None,
+    wikipediaResource : Option[String] = None,
+    imageUrl : Option[String] = None,
+    thumbnailUrl : Option[String] = None,
+    description : Option[String] = None,
+    featureType : Char
+)
     
-case class DBRegion(
-    regionId : String,
-    regionName : String,
-    regionDescription : String,
-    regionThumbnail : Option[String],
-    superRegionId : Option[String]
-    )
-    
+case class DBFeatureHierarchy(
+    botId : Int,
+    topId : Int)     

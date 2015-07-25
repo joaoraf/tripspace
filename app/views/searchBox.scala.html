@@ -1,0 +1,14 @@
+@(searchForm : Form[SearchData])(implicit messages : Messages)
+
+@import utils.MyHelpers.BootstrapInline._
+
+@helper.form(action = routes.SearchController.search(), 'class -> "form-search") {
+		
+	@helper.inputText(
+	         searchForm("searchString"), 
+	         'id -> "searchInputBox", 
+	         'class -> "input-medium search-query",
+	         'placeholder -> "type your search string here")
+	<button type="submit" class="btn btn-default">Search</button>
+	
+}

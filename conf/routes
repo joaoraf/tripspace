@@ -11,6 +11,13 @@ GET         /authenticate/:provider          controllers.SocialAuthController.au
 POST        /authenticate/credentials        controllers.CredentialsAuthController.authenticate
 POST        /signUp                          controllers.SignUpController.signUp
 
+GET			/newTrip						 controllers.ApplicationController.addTrip
+POST		/newTrip						 controllers.ApplicationController.createTrip
+GET			/editTrip/:tripId				 controllers.ApplicationController.editTrip(tripId)
+#POST		/addDayToTrip/:tripId		     controllers.ApplicationController.addDayToTrip(tripId)
+POST		/saveTrip/:tripId				 controllers.ApplicationController.saveTrip(tripId)
+GET			/trip/:tripId				 	 controllers.ApplicationController.viewTrip(tripId)
+
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                    controllers.Assets.at(path="/public", file)
 GET         /webjars/*file                   controllers.WebJarAssets.at(file)
@@ -23,3 +30,12 @@ GET         /webjars/*file                   controllers.WebJarAssets.at(file)
 
 #POIs
 #GET			/resource/poi/:poiId			 controllers.resource.POIController.view
+
+#Searches
+GET			/search							 controllers.SearchController.search
+GET			/search/region/byName/:namePart	 controllers.SearchController.searchRegionByName(namePart)
+GET			/search/city/byName/:namePart	 controllers.SearchController.searchCityByName(namePart)
+GET			/search/place/byName/:namePart	 controllers.SearchController.searchPlaceByName(namePart)
+
+#Routes
+GET 		/javascriptRoutes  				controllers.ApplicationController.javascriptRoutes

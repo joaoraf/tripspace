@@ -1,0 +1,49 @@
+@import forms.TripBaseData
+
+@(data : Form[_], prefix : String = "")(implicit messages : Messages)
+
+     
+    @helper.inputText(
+	         data(s"${prefix}name"), 
+	         '_label -> "Name",
+	         'id -> "tripNameInputBox", 	         
+	         'placeholder -> "Ex.: One week in New York on Winter …",
+	         'class -> "form-control")    
+    @helper.textarea(
+	         data(s"${prefix}description"), 
+	         'id -> "tripDescriptionTextArea",
+	         '_label -> "Description",
+	         'rows -> 3, 	         
+	         'placeholder -> "type here a short description for your trip …",
+	         'class -> "form-control")        
+    @helper.select(
+	         data(s"${prefix}regionId"), 
+	         Seq((data.data(s"${prefix}regionId"),data.data(s"${prefix}regionName"))),
+	         'id -> "tripRegionNameInputBox", 	         
+	         '_label -> "Region",
+	         'placeholder -> "Ex.: France, Europe, Brazil, …",
+	         'class -> "region-search")  
+	<input type="hidden" name="@(s"${prefix}regionName")" value="aaa"/>
+	<script>
+	$('#tripRegionNameInputBox').selectize({
+					valueField: 'id',
+					labelField: 'name',
+					searchField: 'name',
+					options: [],
+					create: false,
+					load: function(query, callback) {
+						if (!query.length) return callback();
+						$.ajax({
+							url: jsRoutes.controllers.SearchController.searchRegionByName(query).url,
+							type: 'GET',
+							error: function() {
+								callback();
+							},
+							success: function(res) {
+								callback(res);
+							}
+						});
+					}
+					});
+	</script>      	
+  
