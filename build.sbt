@@ -52,6 +52,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "jquery" % "2.1.4",
   "org.webjars" % "angular-ui-bootstrap" % "0.13.0",
   "org.webjars" % "angularjs" % "1.4.2",
+  "org.webjars" % "selectize.js" % "0.12.1",
   "com.typesafe.akka" %% "akka-agent" % "2.3.9",
   "net.codingwell" %% "scala-guice" % "4.0.0-beta5",
 //  "com.typesafe.play" %% "play-slick" % "1.0.0-SNAPSHOT",

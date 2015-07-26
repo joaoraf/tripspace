@@ -1,7 +1,7 @@
 @import forms.TripBaseData
 
 @(data : Form[_], prefix : String = "")(implicit messages : Messages)
-
+@{ println(s"data.data=${data.data}") }
      
     @helper.inputText(
 	         data(s"${prefix}name"), 
@@ -18,11 +18,13 @@
 	         'class -> "form-control")        
     @helper.select(
 	         data(s"${prefix}regionId"), 
-	         Seq((data.data(s"${prefix}regionId"),data.data(s"${prefix}regionName"))),
+	         data.data.get(s"${prefix}regionId").map(rid => (rid,data.data(s"${prefix}regionName"))).to[Seq],
 	         'id -> "tripRegionNameInputBox", 	         
 	         '_label -> "Region",
 	         'placeholder -> "Ex.: France, Europe, Brazil, …",
-	         'class -> "region-search")  
+	         'class -> "region-search",
+	         'style -> "display: none"
+	         )  
 	<input type="hidden" name="@(s"${prefix}regionName")" value="aaa"/>
 	<script>
 	$('#tripRegionNameInputBox').selectize({

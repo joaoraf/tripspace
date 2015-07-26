@@ -32,11 +32,11 @@
     <i ng-show="loadingRegions" class="glyphicon glyphicon-refresh"></i>
   </div>
   
-  <div class="panel panel-default day-panel" ng-repeat="(dayKey,day) in trip.days track by day.dayNum">
-          <div class="panel-heading">Day #{{day.dayNum}} <button class="btn" ng-click="removeDay(trip,day)">(remove)</button></div>
+  <div class="panel panel-default day-panel" ng-repeat="(dayKey,day) in trip.days track by day.num">
+          <div class="panel-heading">Day #{{day.num}} <button class="btn" ng-click="removeDay(trip,day)">(remove)</button></div>
     <div class="panel-body form-group">
-      <label for="inputDayDesc{{day.dayNum}}">Description:</label>
-      <input type="text" id="inputDayDesc{{day.dayNum}}" size="40" ng-model="day.description">
+      <label for="inputDayDesc{{day.num}}">Description:</label>
+      <input type="text" id="inputDayDesc{{day.num}}" size="40" ng-model="day.description">
     </div>
     <table class="table">
       <thead>
@@ -52,9 +52,9 @@
           <td>{{act.order}}</td>
           <td><input type="text" ng-model="act.length" size="3"></td>
           <td><input type="text" size="40" ng-model="act.description"></td>
-          <td ng-if="act.actType == 'visit'">
-            <label for="input_visit_{{day.dayNum}}_{{act.order}}">Visit to:</label>
-            <input id="input_visit_{{day.dayNum}}_{{act.order}}" type="text" 
+          <td ng-if="act.type == 'visit'">
+            <label for="input_visit_{{day.num}}_{{act.order}}">Visit to:</label>
+            <input id="input_visit_{{day.num}}_{{act.order}}" type="text" 
                          ng-model="act.poiRef" 
                          placeholder="Click to choose ..." 
                          typeahead-editable="false" 
@@ -63,9 +63,9 @@
                          typeahead-template-url="refTemplate.html"
                          class="form-control"/>
           </td>
-          <td ng-if="act.actType == 'transport'">
-            <label for="input_move_from_{{day.dayNum}}_{{act.order}}">From:</label>
-            <input id="input_move_from_{{day.dayNum}}_{{act.order}}" type="text" 
+          <td ng-if="act.type == 'transport'">
+            <label for="input_move_from_{{day.num}}_{{act.order}}">From:</label>
+            <input id="input_move_from_{{day.num}}_{{act.order}}" type="text" 
                          ng-model="act.fromCityRef" 
                          placeholder="Click to choose ..." 
                          typeahead-editable="false" 
@@ -73,8 +73,8 @@
                          typeahead-input-formatter="$model.name"
                          typeahead-template-url="refTemplate.html"
                          class="form-control"/>
-            <label for="input_move_to_{{day.dayNum}}_{{act.order}}">To:</label>
-            <input id="input_move_to_{{day.dayNum}}_{{act.order}}" type="text" 
+            <label for="input_move_to_{{day.num}}_{{act.order}}">To:</label>
+            <input id="input_move_to_{{day.num}}_{{act.order}}" type="text" 
                          ng-model="act.toCityRef" 
                          placeholder="Click to choose ..." 
                          typeahead-editable="false" 
@@ -82,13 +82,13 @@
                          typeahead-input-formatter="$model.name"
                          typeahead-template-url="refTemplate.html"
                          class="form-control"/>
-            <label for="input_modality_{{day.dayNum}}_{{act.order}}">By:</label>
-            <select id="input_modality_{{day.dayNum}}_{{act.order}}" ng-model="act.modalityRef.id">
+            <label for="input_modality_{{day.num}}_{{act.order}}">By:</label>
+            <select id="input_modality_{{day.num}}_{{act.order}}" ng-model="act.modalityRef.id">
               <option value="0">by car</option>
               <option value="1">by plane</option>
             </select>
           </td>
-          <td ng-if="act.actType == 'free'">
+          <td ng-if="act.type == 'free'">
             free time
           </td>
           <td>
