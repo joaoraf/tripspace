@@ -31,6 +31,8 @@ import models.services.impl.TripServiceImpl
 import models.services.TripService
 import models.services.impl.SearchServiceImpl
 import models.services.SearchService
+import models.services.rdf.RdfService
+import models.services.rdf.impl.RdfServiceImpl
 
 /**
  * The Guice module which wires all Tripspace dependencies.
@@ -56,6 +58,7 @@ class TripspaceModule extends AbstractModule with ScalaModule with Logger {
     bind[EventBus].toInstance(EventBus())
     bind[TripDAO].to[TripSlickDAO]
     bind[FeatureDAO].to[FeatureSlickDAO]
+    bind[RdfService].to[RdfServiceImpl]
     
     bind[TripService].to[TripServiceImpl]
     bind[SearchService].to[SearchServiceImpl]
