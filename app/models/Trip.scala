@@ -1,8 +1,13 @@
 package models
 
 import scala.collection.SortedMap
+
 import java.net.URL
 import play.api.libs.json._
+import play.api.libs.json.util._
+import play.api.libs.json.Reads._
+import play.api.libs.json.Writes._
+import play.api.libs.json.Format._
 import play.api.libs.functional.syntax._
 
 
@@ -22,7 +27,15 @@ case class Trip(
     userRef : Ref[UserId],    
     days : SortedMap[Int,TripDay] = SortedMap(),
     description : String = "",
-    regionRef : Ref[FeatureId])
+    regionRef : Ref[FeatureId],
+    cityRef: Ref[FeatureId]) {
+  def endsIn : Option[Ref[FeatureId]] = {
+    days.values.foldLeft[Option[Ref[FeatureId]]](Some(cityRef)) {
+      case (cr,day) =>
+        day.endsIn.orElse(cr)
+    }
+  }
+}
     
 object JsonTrip {
   
@@ -33,8 +46,21 @@ object JsonTrip {
       userRef : Ref[UserId],
       days : Seq[RepTripDay],
       description : String,
-      regionRef : Ref[FeatureId]
+      regionRef : Ref[FeatureId],
+      cityRef : Ref[FeatureId]
+      ) {
+    def toTrip = {
+      Trip(
+          ref = ref,
+          isPublic = isPublic,
+          userRef = userRef,
+          description = description,
+          regionRef = regionRef,
+          cityRef = cityRef,
+          days = SortedMap(days.map(d => (d.num,d.toTripDay)):_*)
       )
+    }
+  }
   object RepTrip {
     def fromTrip(t : Trip) = 
       RepTrip(
@@ -43,34 +69,45 @@ object JsonTrip {
       userRef = t.userRef,
       days = t.days.to[Seq]map({case (num,day) => RepTripDay.fromTripDay(num, day)}),
       description = t.description,
-      regionRef = t.regionRef
+      regionRef = t.regionRef,
+      cityRef = t.cityRef
       )
-      implicit def Format : Format[RepTrip] = (
+    
+    implicit def Format : Format[RepTrip] = (
           (JsPath \ "ref").format[Ref[TripId]] and
           (JsPath \ "isPublic").format[Boolean] and
           (JsPath \ "userRef").format[Ref[UserId]] and
           (JsPath \ "days").format[Seq[RepTripDay]] and
           (JsPath \ "description").format[String] and
-          (JsPath \ "regionRef").format[Ref[FeatureId]]
+          (JsPath \ "regionRef").format[Ref[FeatureId]] and
+          (JsPath \ "cityRef").format[Ref[FeatureId]]
       )(RepTrip.apply, unlift(RepTrip.unapply))
   }
   
   case class RepTripDay(
-      dayNum : Int,
+      num : Int,
       description : String,
       activities : Seq[RepActivity]
-      )
+      ) {
+    def toTripDay = {
+      val desc = description.trim 
+      TripDay(          
+          label = if(desc.isEmpty()) { None } else { Some(desc) },
+          activities = activities.sortBy(_.order).map(_.toActivity)
+          )
+    }
+  }
   
   object RepTripDay {
     implicit def Format : Format[RepTripDay] = (
-        (JsPath \ "dayNum").format[Int] and
+        (JsPath \ "num").format[Int] and
         (JsPath \ "description").format[String] and
         (JsPath \ "activities").format[Seq[RepActivity]]
     )(RepTripDay.apply,unlift(RepTripDay.unapply))  
   
     def fromTripDay(num : Int,td : TripDay) = {
       RepTripDay(
-          dayNum = num,
+          num = num,
           description = td.label.getOrElse(""),
           activities = td.activities.zipWithIndex.map({ case (a,i) => RepActivity.fromActivity(i+1,a)})
           )       
@@ -80,33 +117,37 @@ object JsonTrip {
   case class RepActivity(
       order : Int,
       length : Int,
-      description : String,
+      description : Option[String] = None,
       actType : String,
-      poiRef : Ref[FeatureId],
-      fromCityRef : Ref[FeatureId],
-      toCityRef : Ref[FeatureId],
-      modalityRef : Ref[TransportModalityId]      
-      )
+      poiRef : Option[Ref[FeatureId]] = None,      
+      toCityRef : Option[Ref[FeatureId]] = None,
+      modalityRef : Option[Ref[TransportModalityId]] = None      
+      ) {
+    def toActivity : Activity = actType match {
+      case "visit" => Visit(poiRef.get,description.getOrElse(""),length)
+      case "transport" => Transport(toCityRef.get,modalityRef.get,description.getOrElse(""),length)
+      case "free" => UndefinedActivity(length,description.getOrElse(""))
+    }
+  }
   
   object RepActivity {
     implicit def Format : Format[RepActivity] = (
         (JsPath \ "order").format[Int] and
         (JsPath \ "length").format[Int] and
-        (JsPath \ "description").format[String] and
-        (JsPath \ "actType").format[String] and
-        (JsPath \ "poiRef").format[Ref[FeatureId]] and
-        (JsPath \ "fromCityRef").format[Ref[FeatureId]] and
-        (JsPath \ "toCityRef").format[Ref[FeatureId]] and
-        (JsPath \ "modalityRef").format[Ref[TransportModalityId]]        
+        (JsPath \ "description").formatNullable[String] and
+        (JsPath \ "type").format[String] and
+        (JsPath \ "poiRef").formatNullable[Ref[FeatureId]] and        
+        (JsPath \ "toCityRef").formatNullable[Ref[FeatureId]] and
+        (JsPath \ "modalityRef").formatNullable[Ref[TransportModalityId]]        
       )(RepActivity.apply,unlift(RepActivity.unapply))  
   
     def fromActivity(order : Int, a : Activity) : RepActivity =  a match {
       case v : Visit =>
-        RepActivity(order,v.lengthHours,v.description,"visit",v.poiRef,Ref(0,""),Ref(0,""),Ref("",""))
+        RepActivity(order,v.lengthHours,Some(v.description),"visit",Some(v.poiRef),None,None)
       case t : Transport =>
-        RepActivity(order,t.lengthHours,t.description,"transport",Ref(0,""),t.fromCity,t.toCity,t.transportModalityRef)
+        RepActivity(order,t.lengthHours,Some(t.description),"transport",None,Some(t.toCity),Some(t.transportModalityRef))
       case u : UndefinedActivity =>
-        RepActivity(order,u.lengthHours,u.description,"free",Ref(0,""),Ref(0,""),Ref(0,""),Ref("",""))
+        RepActivity(order,u.lengthHours,Some(u.description),"free",None,None,None)
     }
   }
     
@@ -164,15 +205,23 @@ case class Feature(
 case class TripDay (       
     label : Option[String] = None,
     activities : Seq[Activity] = Seq()
-    )
+    ) {
+  def endsIn : Option[Ref[FeatureId]] = {
+    activities.foldLeft[Option[Ref[FeatureId]]](None) {
+      case (cr,act) =>
+        act.endsIn.orElse(cr)
+    }
+  }
+}
 
 sealed trait Activity {
   val lengthHours : Int
   val description : String
+  def endsIn : Option[Ref[FeatureId]] = None
 }
 
-case class UndefinedActivity(lengthHours : Int = 1) extends Activity {
-  val description = ""
+case class UndefinedActivity(lengthHours : Int = 1, description : String = "") extends Activity {
+  
 }
 
 case class Visit(    
@@ -181,13 +230,14 @@ case class Visit(
     lengthHours : Int = 1
     ) extends Activity
 
-case class Transport(    
-    fromCity : Ref[FeatureId],
+case class Transport(        
     toCity : Ref[FeatureId],
     transportModalityRef : Ref[TransportModalityId],
     description : String = "",
     lengthHours : Int = 1
-    ) extends Activity    
+    ) extends Activity    {
+  override def endsIn : Option[Ref[FeatureId]] = Some(toCity)
+}
     
 case class TransportModality(
     ref : Ref[TransportModalityId]

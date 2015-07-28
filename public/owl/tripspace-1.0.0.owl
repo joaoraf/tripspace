@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE Ontology [
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY xml "http://www.w3.org/XML/1998/namespace" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+
+<Ontology xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://tripspace.ngrok.io/assets/owl/tripspace-1.0.0"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     ontologyIRI="http://tripspace.ngrok.io/assets/owl/tripspace-1.0.0">
+    <Prefix name="" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+    <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+    <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
+    <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
+    <Import>http://www.geonames.org/ontology</Import>
+    <Declaration>
+        <Class IRI="#TspaceTrip"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TspaceTripActivity"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TspaceTripDay"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TspaceTripFreeTime"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TspaceTripTransport"/>
+    </Declaration>
+    <Declaration>
+        <Class IRI="#TspaceTripVisit"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#containedInRegion"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#containedInTrip"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#containsActivity"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#containsDay"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#endsInCity"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#happensAtDay"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#refersToFeature"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#startsInCity"/>
+    </Declaration>
+    <Declaration>
+        <ObjectProperty IRI="#visitsPlace"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#hasDescription"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#hasDuration"/>
+    </Declaration>
+    <SubClassOf>
+        <Class IRI="#TspaceTripFreeTime"/>
+        <Class IRI="#TspaceTripActivity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TspaceTripTransport"/>
+        <Class IRI="#TspaceTripActivity"/>
+    </SubClassOf>
+    <SubClassOf>
+        <Class IRI="#TspaceTripVisit"/>
+        <Class IRI="#TspaceTripActivity"/>
+    </SubClassOf>
+    <DisjointClasses>
+        <Class IRI="#TspaceTrip"/>
+        <Class IRI="#TspaceTripActivity"/>
+        <Class IRI="#TspaceTripDay"/>
+    </DisjointClasses>
+    <DisjointClasses>
+        <Class IRI="#TspaceTripFreeTime"/>
+        <Class IRI="#TspaceTripTransport"/>
+        <Class IRI="#TspaceTripVisit"/>
+    </DisjointClasses>
+    <DisjointUnion>
+        <Class IRI="#TspaceTripActivity"/>
+        <Class IRI="#TspaceTripFreeTime"/>
+        <Class IRI="#TspaceTripTransport"/>
+        <Class IRI="#TspaceTripVisit"/>
+    </DisjointUnion>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#containedInRegion"/>
+        <ObjectProperty IRI="#refersToFeature"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#endsInCity"/>
+        <ObjectProperty IRI="#refersToFeature"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#startsInCity"/>
+        <ObjectProperty IRI="#refersToFeature"/>
+    </SubObjectPropertyOf>
+    <SubObjectPropertyOf>
+        <ObjectProperty IRI="#visitsPlace"/>
+        <ObjectProperty IRI="#refersToFeature"/>
+    </SubObjectPropertyOf>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#containedInTrip"/>
+        <ObjectProperty IRI="#containsDay"/>
+    </InverseObjectProperties>
+    <InverseObjectProperties>
+        <ObjectProperty IRI="#happensAtDay"/>
+        <ObjectProperty IRI="#containsActivity"/>
+    </InverseObjectProperties>
+    <FunctionalObjectProperty>
+        <ObjectProperty IRI="#containedInRegion"/>
+    </FunctionalObjectProperty>
+    <FunctionalObjectProperty>
+        <ObjectProperty IRI="#endsInCity"/>
+    </FunctionalObjectProperty>
+    <FunctionalObjectProperty>
+        <ObjectProperty IRI="#startsInCity"/>
+    </FunctionalObjectProperty>
+    <FunctionalObjectProperty>
+        <ObjectProperty IRI="#visitsPlace"/>
+    </FunctionalObjectProperty>
+    <AsymmetricObjectProperty>
+        <ObjectProperty IRI="#containedInRegion"/>
+    </AsymmetricObjectProperty>
+    <AsymmetricObjectProperty>
+        <ObjectProperty IRI="#containsActivity"/>
+    </AsymmetricObjectProperty>
+    <AsymmetricObjectProperty>
+        <ObjectProperty IRI="#containsDay"/>
+    </AsymmetricObjectProperty>
+    <AsymmetricObjectProperty>
+        <ObjectProperty IRI="#endsInCity"/>
+    </AsymmetricObjectProperty>
+    <AsymmetricObjectProperty>
+        <ObjectProperty IRI="#refersToFeature"/>
+    </AsymmetricObjectProperty>
+    <AsymmetricObjectProperty>
+        <ObjectProperty IRI="#startsInCity"/>
+    </AsymmetricObjectProperty>
+    <AsymmetricObjectProperty>
+        <ObjectProperty IRI="#visitsPlace"/>
+    </AsymmetricObjectProperty>
+    <IrreflexiveObjectProperty>
+        <ObjectProperty IRI="#containedInRegion"/>
+    </IrreflexiveObjectProperty>
+    <IrreflexiveObjectProperty>
+        <ObjectProperty IRI="#containsActivity"/>
+    </IrreflexiveObjectProperty>
+    <IrreflexiveObjectProperty>
+        <ObjectProperty IRI="#containsDay"/>
+    </IrreflexiveObjectProperty>
+    <IrreflexiveObjectProperty>
+        <ObjectProperty IRI="#endsInCity"/>
+    </IrreflexiveObjectProperty>
+    <IrreflexiveObjectProperty>
+        <ObjectProperty IRI="#refersToFeature"/>
+    </IrreflexiveObjectProperty>
+    <IrreflexiveObjectProperty>
+        <ObjectProperty IRI="#startsInCity"/>
+    </IrreflexiveObjectProperty>
+    <IrreflexiveObjectProperty>
+        <ObjectProperty IRI="#visitsPlace"/>
+    </IrreflexiveObjectProperty>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#containedInRegion"/>
+        <Class IRI="#TspaceTrip"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#containsActivity"/>
+        <Class IRI="#TspaceTripDay"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#containsDay"/>
+        <Class IRI="#TspaceTrip"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyDomain>
+        <ObjectProperty IRI="#visitsPlace"/>
+        <Class IRI="#TspaceTripVisit"/>
+    </ObjectPropertyDomain>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#containsActivity"/>
+        <Class IRI="#TspaceTripActivity"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#containsDay"/>
+        <Class IRI="#TspaceTripDay"/>
+    </ObjectPropertyRange>
+    <ObjectPropertyRange>
+        <ObjectProperty IRI="#refersToFeature"/>
+        <Class IRI="http://geovocab.org/spatial#Feature"/>
+    </ObjectPropertyRange>
+    <FunctionalDataProperty>
+        <DataProperty IRI="#hasDuration"/>
+    </FunctionalDataProperty>
+    <DataPropertyDomain>
+        <DataProperty IRI="#hasDuration"/>
+        <Class IRI="#TspaceTripActivity"/>
+    </DataPropertyDomain>
+    <DataPropertyRange>
+        <DataProperty IRI="#hasDescription"/>
+        <Datatype abbreviatedIRI="xsd:string"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#hasDuration"/>
+        <Datatype abbreviatedIRI="xsd:nonNegativeInteger"/>
+    </DataPropertyRange>
+</Ontology>
+
+
+
+<!-- Generated by the OWL API (version 3.5.1) http://owlapi.sourceforge.net -->
+

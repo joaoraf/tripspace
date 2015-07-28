@@ -15,7 +15,9 @@ GET			/newTrip						 controllers.ApplicationController.addTrip
 POST		/newTrip						 controllers.ApplicationController.createTrip
 GET			/editTrip/:tripId				 controllers.ApplicationController.editTrip(tripId)
 #POST		/addDayToTrip/:tripId		     controllers.ApplicationController.addDayToTrip(tripId)
-POST		/saveTrip/:tripId				 controllers.ApplicationController.saveTrip(tripId)
+PUT			/saveTrip				 		 controllers.ApplicationController.saveTrip
+POST		/publishTrip/:tripId			 controllers.ApplicationController.publishTrip(tripId)
+POST		/removeTrip/:tripId			 	 controllers.ApplicationController.removeTrip(tripId)
 GET			/trip/:tripId				 	 controllers.ApplicationController.viewTrip(tripId)
 
 # Map static resources from the /public folder to the /assets URL path
@@ -29,13 +31,13 @@ GET         /webjars/*file                   controllers.WebJarAssets.at(file)
 #GET			/resource/city/:cityId		 	 controllers.resource.CityController.view
 
 #POIs
-#GET			/resource/poi/:poiId			 controllers.resource.POIController.view
+#GET			/resource/place/:poiId			 controllers.resource.POIController.view
 
 #Searches
 GET			/search							 controllers.SearchController.search
 GET			/search/region/byName/:namePart	 controllers.SearchController.searchRegionByName(namePart)
-GET			/search/city/byName/:namePart	 controllers.SearchController.searchCityByName(namePart)
-GET			/search/place/byName/:namePart	 controllers.SearchController.searchPlaceByName(namePart)
+GET			/search/city/byName/:regionId/:namePart	 controllers.SearchController.searchCityByName(regionId : Long,namePart)
+GET			/search/place/byName/:cityId/:namePart	 controllers.SearchController.searchPlaceByName(cityId : Long,namePart)
 
 #Routes
 GET 		/javascriptRoutes  				controllers.ApplicationController.javascriptRoutes

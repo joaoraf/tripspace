@@ -32,9 +32,14 @@ class TripSlickDAO @Inject() (dbConfigProvider : DatabaseConfigProvider, slickQu
   def findByUser(userID: UserId)(implicit ec : ExecutionContext): Future[Map[TripId,Trip]] = 
     db.run(slickQueries.trip.findByUser(userID))
   
-  def save(trip : Trip, userId : Option[UserId] = None)(implicit ec : ExecutionContext) : Future[Trip] = 
+  def save(trip : Trip, userId : UserId)(implicit ec : ExecutionContext) : Future[Trip] = 
     db.run(slickQueries.trip.save(trip,userId))
-
+    
+  def publish(tripId : TripId, userId : UserId)(implicit ec : ExecutionContext) : Future[Unit] = 
+    db.run(slickQueries.trip.publish(tripId,userId))
+    
+  def remove(tripId : TripId, userId : UserId)(implicit ec : ExecutionContext) : Future[Unit] = 
+    db.run(slickQueries.trip.remove(tripId,userId))
 }
 
 class FeatureSlickDAO @Inject() (dbConfigProvider : DatabaseConfigProvider, slickQueries : SlickQueries) extends FeatureDAO {
@@ -45,4 +50,10 @@ class FeatureSlickDAO @Inject() (dbConfigProvider : DatabaseConfigProvider, slic
 
   def findRefsByTypeName(featureType : FeatureType, namePart : String)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]] =
     db.run(slickQueries.feature.findRefsByTypeName(featureType,namePart))
+  
+  def findRefsByTypeNameAncestor(featureType : FeatureType, namePart : String, ancestorId : Long)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]] =
+    for {
+      res <- db.run(slickQueries.feature.findRefsByTypeNameAncestor(featureType,namePart,ancestorId))
+      _ = println(s"findRefsByTypeNameAncestor: res=${res.mkString("\n\t", "\n\t", "\n")}")
+    } yield (res)
 }

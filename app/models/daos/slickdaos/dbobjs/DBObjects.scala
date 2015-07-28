@@ -6,7 +6,8 @@ case class DBTrip(
     tripDescription : String,
     tripIsPublic : Boolean,
     userId : String,
-    regionId : Int
+    regionId : Long,
+    cityId : Long 
     )
                  
                 
@@ -27,24 +28,22 @@ case class DBActivity(
     tripId : String,
     dayNumber : Int,
     order : Int,
-    lengthHours : Int) extends DBBaseActivity
+    lengthHours : Int,
+    description : String) extends DBBaseActivity
     
 case class DBVisitActivity(
     tripId : String,
     dayNumber : Int,
     order : Int,
-    visitCityId : Int,
-    visitDescription : String
+    visitCityId : Long    
     )  extends DBBaseActivity
 
 case class DBTransportActivity(
     tripId : String,
     dayNumber : Int,
     order : Int,
-    fromCityId : Int,
-    toCityId : Int,
-    transportModalityId : String,
-    transportDescription : String
+    toCityId : Long,
+    transportModalityId : String    
     )  extends DBBaseActivity  
     
 case class DBTransportModality(
@@ -53,7 +52,7 @@ case class DBTransportModality(
     )
 
 case class DBFeature(
-    id : Int,
+    id : Long,
     name : String,
     latitude : Double,
     longitude : Double,
@@ -67,5 +66,5 @@ case class DBFeature(
 )
     
 case class DBFeatureHierarchy(
-    botId : Int,
-    topId : Int)     
+    botId : Long,
+    topId : Long)     

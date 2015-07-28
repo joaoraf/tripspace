@@ -25,8 +25,7 @@ case class ActivityData(
   order : Int,
   lengthHours : Int,
   description : String = "",
-  poiID : Option[FeatureId] = None,
-  fromCityId : Option[FeatureId] = None,
+  poiID : Option[FeatureId] = None,  
   toCityId : Option[FeatureId] = None,
   modalityId : Option[TransportModalityId] = None
   ) {
@@ -35,8 +34,7 @@ case class ActivityData(
     case TYP_FREE => UndefinedActivity(lengthHours)
     case TYP_VISIT => Visit(Ref(poiID.get), description, lengthHours)
     case TYP_TRANSPORT => 
-      Transport(
-        fromCity = Ref(fromCityId.get),
+      Transport(        
         toCity = Ref(toCityId.get),
         transportModalityRef = Ref(modalityId.get),
         description,
@@ -54,9 +52,8 @@ object ActivityData {
       "order" -> of[Int],
       "lengthHours" -> of[Int],
       "description" -> of[String],
-      "poiID" -> optional(of[Int]),
-      "fromCityId" -> optional(of[Int]),
-      "toCityId" -> optional(of[Int]),
+      "poiID" -> optional(of[Long]),      
+      "toCityId" -> optional(of[Long]),
       "modalityId" -> optional(of[String])
       )(ActivityData.apply)(ActivityData.unapply).withPrefix(prefix)
   def form(prefix : String = "") = Form(mapping(prefix))
@@ -64,7 +61,7 @@ object ActivityData {
     case u : UndefinedActivity => ActivityData(TYP_FREE,order,u.lengthHours)
     case v : Visit => ActivityData(TYP_VISIT,order,v.lengthHours,v.description,poiID = Some(v.poiRef.id))
     case t : Transport => ActivityData(TYP_TRANSPORT,order,t.lengthHours,t.description,
-                                       fromCityId = Some(t.fromCity.id), toCityId = Some(t.toCity.id),
+                                       toCityId = Some(t.toCity.id),
                                        modalityId = Some(t.transportModalityRef.id))
   }
 }
@@ -102,6 +99,7 @@ case class TripEditData(
         ref=Ref(tripId,baseData.name),
         userRef = Ref(userId), 
         regionRef = Ref(baseData.regionId),
+        cityRef = Ref(baseData.cityId),
         description = baseData.description,
         days = SortedMap(tripDays.map { td => (td.dayNumber,td.toTripDay) } : _*)
         )

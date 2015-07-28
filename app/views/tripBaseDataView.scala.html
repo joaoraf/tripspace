@@ -26,6 +26,16 @@
 	         'style -> "display: none"
 	         )  
 	<input type="hidden" name="@(s"${prefix}regionName")" value="aaa"/>
+	@helper.select(
+	         data(s"${prefix}cityId"), 
+	         data.data.get(s"${prefix}cityId").map(rid => (rid,data.data(s"${prefix}cityName"))).to[Seq],
+	         'id -> "tripCityNameInputBox", 	         
+	         '_label -> "Starting city",
+	         'placeholder -> "Ex.: Paris, Brasília, …",
+	         'class -> "city-search",
+	         'style -> "display: none"
+	         )  
+	<input type="hidden" name="@(s"${prefix}cityName")" value="aaa"/>
 	<script>
 	$('#tripRegionNameInputBox').selectize({
 					valueField: 'id',
@@ -47,5 +57,26 @@
 						});
 					}
 					});
+    $('#tripCityNameInputBox').selectize({
+					valueField: 'id',
+					labelField: 'name',
+					searchField: 'name',
+					options: [],
+					create: false,
+					load: function(query, callback) {
+						if (!query.length) return callback();
+						var regionId = $('#tripRegionNameInputBox')[0].value;
+						$.ajax({
+							url: jsRoutes.controllers.SearchController.searchCityByName(regionId,query).url,
+							type: 'GET',
+							error: function() {
+								callback();
+							},
+							success: function(res) {
+								callback(res);
+							}
+						});
+					}
+					});					
 	</script>      	
   

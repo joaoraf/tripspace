@@ -37,16 +37,19 @@ class SearchController @Inject() (
     }
   }
   
-  def searchCityByName(namePart : String) = SecuredAction.async { implicit request =>
+  def searchCityByName(regionId : Long, namePart : String) = SecuredAction.async { implicit request =>
+    println(s"searchCityByName: regionId: ${regionId}, namePart: ${namePart}")
     import request.ec
-    searchService.searchCityByNamePart(namePart) map {
-      result => Ok(Json.toJson(result))
+    searchService.searchCityByNamePart(regionId, namePart) map {
+      result =>
+        println(s"searchCityByName: regionId: ${regionId}, namePart: ${namePart}, result: ${result}")
+        Ok(Json.toJson(result))
     }
   }
   
-  def searchPlaceByName(namePart : String) = SecuredAction.async { implicit request =>
+  def searchPlaceByName(cityId : Long, namePart : String) = SecuredAction.async { implicit request =>
     import request.ec
-    searchService.searchPlaceByNamePart(namePart) map {
+    searchService.searchPlaceByNamePart(cityId, namePart) map {
       result => Ok(Json.toJson(result))
     }
   }

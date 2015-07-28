@@ -2,8 +2,7 @@
 
 @import forms.SearchForm
 
-@main("Tripspace - Home", Some(user)) {
-	@searchBox(SearchForm.form)
+@main("Tripspace - Home", Some(user)) {	
 	<div>
 	<a class="btn" href="@routes.ApplicationController.addTrip">Add a new trip</a>
 	</div>

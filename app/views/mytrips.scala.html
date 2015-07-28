@@ -11,15 +11,23 @@
 		<td>@trip.description</td>
 		<td> @if(trip.isPublic) { 
 		       public
-		       <i class="glyphicon glyphicon-search"> </i>		     
+		       &nbsp;
+		       <a class="btn btn-xs" href="@routes.ApplicationController.viewTrip(trip.ref.id.toString)"><i class="glyphicon glyphicon-search">&nbsp;</i></a>		     
 		     } else {
 		       private 
 		       &nbsp;
-		       <a href="@routes.ApplicationController.editTrip(trip.ref.id.toString)"><i class="glyphicon glyphicon-pencil">&nbsp;</i></a>
+		       <a class="btn btn-xs" href="@routes.ApplicationController.editTrip(trip.ref.id.toString)"><i class="glyphicon glyphicon-pencil">&nbsp;</i></a>
 		       &nbsp;
-		       <a href="@routes.ApplicationController.viewTrip(trip.ref.id.toString)"><i class="glyphicon glyphicon-search">&nbsp;</i></a>
+		       <a class="btn btn-xs" href="@routes.ApplicationController.viewTrip(trip.ref.id.toString)"><i class="glyphicon glyphicon-search">&nbsp;</i></a>
 		       &nbsp;
-		       <i class="glyphicon glyphicon-remove">&nbsp;</i>
+		       <form style="display:inline;" method="post" action="@routes.ApplicationController.publishTrip(trip.ref.id.toString)">
+		       <button class="btn btn-xs" type="submit"><i class="glyphicon glyphicon-cloud-upload">&nbsp;</i></button>
+		       </form>
+		       &nbsp;
+		       <form style="display:inline;" method="post" action="@routes.ApplicationController.removeTrip(trip.ref.id.toString)">
+		       	<button class="btn btn-xs" type="submit"><i class="glyphicon glyphicon-remove">&nbsp;</i></button>
+		       </form>
+		       
 		     } 
 		</td>
 		</tr>

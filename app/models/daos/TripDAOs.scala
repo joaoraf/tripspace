@@ -13,6 +13,7 @@ trait FeatureDAO {
   def findAll(ids : Set[FeatureId])(implicit ec : ExecutionContext) : Future[Map[FeatureId,Feature]] */
   
   def findRefsByTypeName(featureType : FeatureType, namePart : String)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]]
+  def findRefsByTypeNameAncestor(featureType : FeatureType, namePart : String, ancestorId : Long)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]]
 }
 
 trait TripDAO {
@@ -24,7 +25,11 @@ trait TripDAO {
   
   def findByUser(userID: UserId)(implicit ec : ExecutionContext): Future[Map[TripId,Trip]]
   
-  def save(trip : Trip, userId : Option[UserId] = None)(implicit ec : ExecutionContext) : Future[Trip]
+  def save(trip : Trip, userId : UserId)(implicit ec : ExecutionContext) : Future[Trip]
+  
+  def publish(tripId : TripId, userId : UserId)(implicit ec : ExecutionContext) : Future[Unit]
+  
+  def remove(tripId : TripId, userId : UserId)(implicit ec : ExecutionContext) : Future[Unit]
 
 }
 

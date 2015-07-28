@@ -23,7 +23,7 @@ class TripServiceImpl @Inject() (
       tripDao.findByUser(id).map(_.values.to[IndexedSeq].sortBy(_.ref.name))
     }
     def createTrip(trip : Trip, id : UserId)(implicit ec : ExecutionContext) : Future[Trip] = {
-      tripDao.save(trip, Some(id))
+      tripDao.save(trip, id)
     }
     def getTrip(tripId : TripId, userId : Option[UserId] = None)(implicit ec : ExecutionContext) : Future[Trip] = {
       tripDao.find(tripId, userId).flatMap { 
@@ -33,6 +33,12 @@ class TripServiceImpl @Inject() (
     }
     
     def saveTrip(trip : Trip, userId : UserId)(implicit ec : ExecutionContext) : Future[Trip] = {
-      tripDao.save(trip, Some(userId))
+      tripDao.save(trip, userId)
+    }
+    def publishTrip(tripId : TripId,userId : UserId)(implicit ec : ExecutionContext) : Future[Unit] = {
+      tripDao.publish(tripId,userId)
+    }
+    def removeTrip(tripId : TripId,userId : UserId)(implicit ec : ExecutionContext) : Future[Unit] = {
+      tripDao.remove(tripId,userId)
     }
 }

@@ -66,7 +66,8 @@ libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core" % "7.1.2",
   cache,
   "org.mindrot" % "jbcrypt" % "0.3m",
-  "com.zaxxer" % "HikariCP" % "2.3.7"
+  "com.zaxxer" % "HikariCP" % "2.3.7",
+  "org.apache.jena" % "apache-jena-libs" % "2.13.0"
 )
 
 EclipseKeys.createSrc := EclipseCreateSrc.All
@@ -82,6 +83,7 @@ scalacOptions ++= Seq(
   "-unchecked", // Enable additional warnings where generated code depends on assumptions.
   "-Xfatal-warnings", // Fail the compilation if there are any warnings.
   "-Xlint", // Enable recommended additional warnings.
+  "-Xlint:-missing-interpolator",
   "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver.
   "-Ywarn-dead-code", // Warn when dead code is identified.
   "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures.

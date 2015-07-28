@@ -15,5 +15,5 @@ package object models {
   type RegionId = ResourceId
   type POIId = ResourceId
   
-  type FeatureId = Int
+  type FeatureId = Long
 }

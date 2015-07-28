@@ -18,6 +18,7 @@ import com.mohiva.play.silhouette.impl.providers.openid.services.PlayOpenIDServi
 import forms._
 import javax.inject.Inject
 import models.User
+import models.JsonTrip
 import models.services.TripService
 import play.api.i18n.Messages
 import play.api.i18n.MessagesApi
@@ -29,6 +30,11 @@ import models.TripDay
 import models.UndefinedActivity
 import play.api.routing.Router
 import play.api.routing.JavaScriptReverseRouter
+import play.api.libs.json.Json
+import models.Trip
+import models.Ref
+import play.api.http.MediaRange
+import models.services.rdf.RdfService
 
 /**
  * The basic application controller.
@@ -40,7 +46,8 @@ class ApplicationController @Inject() (
   socialProviderRegistry: SocialProviderRegistry,
   messagesApi : MessagesApi,
   protected val env: Environment[User, SessionAuthenticator],
-  tripService : TripService)
+  tripService : TripService,
+  rdfService : RdfService)
   extends Silhouette[User, SessionAuthenticator] with Logger {
   
   
@@ -62,7 +69,12 @@ class ApplicationController @Inject() (
    * Add a new Trip
    */
   def addTrip = SecuredAction.async { implicit request =>
-    Future.successful(Ok(views.html.addTripForm(request.identity)))   
+    val newTripId = UUID.randomUUID()
+    val user = request.identity
+    val userRef = Ref(user.userID,user.name)
+    val emptyFeatureRef = Ref[Long](-1,"")
+    val newTrip = Trip(ref = Ref(newTripId,""),userRef = userRef, regionRef = emptyFeatureRef, cityRef = emptyFeatureRef )
+    Future.successful(Ok(views.html.tripEditView(newTripId.toString,newTrip,request.identity,true)))
   }
   
   /**
@@ -90,11 +102,12 @@ class ApplicationController @Inject() (
   def editTrip(tripId : TripId) : Action[AnyContent] = SecuredAction.async { implicit request  => 
     import request.ec
     tripService.getTrip(tripId, Some(request.identity.userID)) map { trip =>
-      println(s"Found trip: ${trip}")
+      println(s"\n\n--------------\nFound trip: ${trip}\n---------------\n\n")
       Ok(views.html.tripEditView(tripId.toString,trip,request.identity))
     }        
   }
   
+  /*
   def saveTrip(tripId : String) : Action[AnyContent] = saveTrip(UUID.fromString(tripId))
   
   def saveTrip(tripId : TripId) : Action[AnyContent] = SecuredAction.async { implicit request =>
@@ -108,17 +121,52 @@ class ApplicationController @Inject() (
       Redirect(routes.ApplicationController.viewTrip(trip.ref.id.toString))
     }
   }
+  * 
+  */
+  
+  def saveTrip() : Action[AnyContent] = SecuredAction.async { implicit request =>
+    import JsonTrip._    
+    request.body.asJson match { 
+      case Some(jsonData) =>
+        val repTrip = jsonData.as[RepTrip]
+        val trip = repTrip.toTrip
+        println(s"saveTrip: jsonData=${jsonData},\n repTrip=${repTrip},\n trip = ${trip}")
+        import request.ec
+        tripService.saveTrip(trip, request.identity.userID).flatMap { 
+          newTrip  => Future.successful(Ok(Json.toJson(RepTrip.fromTrip(newTrip)))); 
+        }   
+      case None => Future.successful(Ok(""))
+    }
+    Future.successful(Ok(""))    
+  }
   
   def viewTrip(tripId : String) : Action[AnyContent] = viewTrip(UUID.fromString(tripId))
   
   def viewTrip(tripId : TripId) : Action[AnyContent] = SecuredAction.async { implicit request =>
     import request.ec
     tripService.getTrip(tripId, Some(request.identity.userID)) map { trip =>
-      val editable = trip.isPublic || trip.userRef.id == request.identity.userID
+      val editable = !trip.isPublic && trip.userRef.id == request.identity.userID
       Ok(views.html.viewTrip(trip,Some(request.identity),editable))
     }
     
   }
+  
+  def publishTrip(tripId : String) : Action[AnyContent] = publishTrip(UUID.fromString(tripId))
+  
+  def publishTrip(tripId : TripId) : Action[AnyContent] = SecuredAction.async { implicit request =>
+      import request.ec
+      tripService.publishTrip(tripId,request.identity.userID).flatMap(
+         _ => index(request))    
+  }
+  
+  def removeTrip(tripId : String) : Action[AnyContent] = removeTrip(UUID.fromString(tripId))
+  
+  def removeTrip(tripId : TripId) : Action[AnyContent] = SecuredAction.async { implicit request =>
+      import request.ec
+      tripService.removeTrip(tripId,request.identity.userID).flatMap(
+         _ => index(request))    
+    }
+  
 
   /**
    * Handles the Sign In action.
@@ -157,10 +205,42 @@ class ApplicationController @Inject() (
     env.authenticatorService.discard(request.authenticator, result)
   }
   
+  val rdfMediaRanges = Set[String](
+      "application/rdf+xml", "text/n3",  "test/turtle", 
+      "application/x-turtle", "text/rdf+n3"
+      ).flatMap(MediaRange.parse(_))
+  
+  def resourceTrip(tripId : String) = Action.async { implicit request =>
+    if(request.acceptedTypes.exists(rdfMediaRanges)) {
+      Future.successful(
+          Ok(
+              rdfService.serializeTrip(tripId,
+                  request.acceptedTypes.filter(rdfMediaRanges).head
+              )
+          )
+      )
+    } else {
+      Future.successful(UnsupportedMediaType)
+    }    
+  }
+  
+  def resourceDay(tripId : String, dayNum : Long) = Action.async { implicit request =>
+    ???
+  }
+  
+  def resourceActivity(tripId : String, dayNim : Long, order : Long) = Action.async { implicit request =>
+    ???
+  }
+  
   lazy val javascriptRoutes : Action[AnyContent] = Action { implicit request =>
   Ok(
     JavaScriptReverseRouter("jsRoutes")(
-      routes.javascript.SearchController.searchRegionByName
+      routes.javascript.SearchController.searchRegionByName,
+      routes.javascript.SearchController.searchCityByName,
+      routes.javascript.SearchController.searchPlaceByName,
+      routes.javascript.ApplicationController.saveTrip,
+      routes.javascript.ApplicationController.index,
+      routes.javascript.ApplicationController.publishTrip
     )
   ).as("text/javascript")
 }

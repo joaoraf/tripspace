@@ -1,42 +1,68 @@
 @import forms._
 @import play.api.libs.json.Json
 
-@(tripId : String, trip : Trip, user : User)(implicit messages : Messages)
+@(tripId : String, trip : Trip, user : User,create : Boolean = false)(implicit messages : Messages)
 
-@main("Edit trip", Some(user),Some("tripedit")) {
-
-
+@main(if(create) {"Create trip"} else {"Edit trip"}, Some(user),Some("tripedit")) {
 
 
-<script type="text/ng-template" id="refTemplate.html">
-<a>{{match.model.name}}</a>
-</script>
+
+
 
 <div ng-controller="TripEditCtrl">
-  
+  <form novalidate class="css-form" name="tripEditForm">  
   <div class="form-group">
-    <button type="button" ng-click="saveTrip(trip)">Save</button>
-    <label for="tripNameEdit">Trip name:</label>
-    <input type="text" size="30" id="tripNameEdit" ng-model="trip.ref.name" class="form-control">
+    <button type="button" ng-click="saveTrip()" class="btn btn-default btn-lg"><i class="glyphicon glyphicon-flash"></i>Save</button>
+    <a class="btn btn-lg" href="@routes.ApplicationController.index">Cancel</a>
+    <div class="form-group">
+    <label for="tripNameEdit"  >Trip name:</label>
+    <input type="text" size="30" id="tripNameEdit" ng-model="trip.ref.name" class="form-control" required>
+    </div>
     <label for="tripDescriptionEdit">Trip description:</label>
-    <textarea id="tripDescriptionEdit" cols="60" rows="4" ng-model="trip.description" class="form-control"></textarea>
+    <textarea id="tripDescriptionEdit" cols="60" rows="4" ng-model="trip.description" class="form-control" required></textarea>
     <label for="tripRegionEdit">Trip Region:</label>
-    <input type="text" 
-           ng-model="trip.regionRef" 
-           placeholder="Click to choose ..." 
-           typeahead-editable="false" 
-           typeahead="region for region in getRegion($viewValue)" 
-           typeahead-template-url="refTemplate.html"
-           typeahead-input-formatter="$model.name"
-           typeahead-loading="loadingRegions" class="form-control"/>
-    <i ng-show="loadingRegions" class="glyphicon glyphicon-refresh"></i>
+    
+    <ui-select id="tripRegionEdit"
+               ng-model="trip.regionRef"
+    		   theme="bootstrap"    		   
+    		   title="Choose a region"
+    		   required    		   
+    		   >
+    	<ui-select-match placeholder="Enter a region name ..." autocomplete="false">{{$select.selected.name || trip.regionRef.name}}</ui-select-match>
+    	<ui-select-choices repeat="ref in trip._regions track by $index"
+    					   refresh="refreshRegions($select.search)"
+    					   refresh-delay="300">
+    		<div ng-bind-html="ref.name | highlight: $select.search"></div>
+    	</ui-select-choices>
+    </ui-select>
+    <label for="tripCityEdit">Starting city:</label>
+    <ui-select id="tripCityEdit"
+               ng-model="trip.cityRef"
+    		   theme="bootstrap"    		   
+    		   title="Choose a city"
+    		   required
+    		   >
+    	<ui-select-match placeholder="Enter a city name ..." autocomplete="false">{{$select.selected.name || trip.cityRef.name}}</ui-select-match>
+    	<ui-select-choices repeat="ref in trip._cities track by $index"
+    					   refresh="mainCityRefresher($select.search)"
+    					   refresh-delay="300">
+    		<div ng-bind-html="ref.name | highlight: $select.search"></div>
+    	</ui-select-choices>
+    </ui-select>
+
   </div>
   
   <div class="panel panel-default day-panel" ng-repeat="(dayKey,day) in trip.days track by day.num">
-          <div class="panel-heading">Day #{{day.num}} <button class="btn" ng-click="removeDay(trip,day)">(remove)</button></div>
+          <div class="panel-heading">
+          	Day #{{day.num}} 
+          	<button class="btn btn-xs pull-right" ng-click="removeDay(trip,day)"><i class="glyphicon glyphicon-remove"></i></button>
+          	<button ng-if="day._canMoveUp" class="bnt btn-xs pull-right" ng-click="moveDay(day,-1);"><i class="glyphicon glyphicon-chevron-up"></i></button>
+            <button ng-if="day._canMoveDown" class="bnt btn-xs pull-right" ng-click="moveDay(day,1);"><i class="glyphicon glyphicon-chevron-down"></i></button>
+          	<!-- <a href="#" class="btn btn-xs pull-right" ng-click="removeDay(trip,day)"><i class="glyphicon glyphicon-remove"></i>&nbsp;</a> --> 
+          </div>
     <div class="panel-body form-group">
       <label for="inputDayDesc{{day.num}}">Description:</label>
-      <input type="text" id="inputDayDesc{{day.num}}" size="40" ng-model="day.description">
+      <input type="text" id="inputDayDesc{{day.num}}" size="40" ng-model="day.description" required>
     </div>
     <table class="table">
       <thead>
@@ -44,75 +70,96 @@
           <th>Order</th>
           <th>Length (hours)</th>
           <th>Description</th>
-          <th colspan="2"></th>
+          <th colspan="5"></th>
         </tr>
       </thead>
       <tbody>
         <tr ng-repeat="(actKey,act) in day.activities track by act.order" >
           <td>{{act.order}}</td>
-          <td><input type="text" ng-model="act.length" size="3"></td>
-          <td><input type="text" size="40" ng-model="act.description"></td>
-          <td ng-if="act.type == 'visit'">
-            <label for="input_visit_{{day.num}}_{{act.order}}">Visit to:</label>
-            <input id="input_visit_{{day.num}}_{{act.order}}" type="text" 
-                         ng-model="act.poiRef" 
-                         placeholder="Click to choose ..." 
-                         typeahead-editable="false" 
-                         typeahead="place for place in getPlace($viewValue)"
-                         typeahead-input-formatter="$model.name"
-                         typeahead-template-url="refTemplate.html"
-                         class="form-control"/>
+          <td><input type="number" min="0" max="12" pattern="[1-9][0-9]*" ng-model="act.length" size="3" required></td>
+          <td><input type="text" size="40" ng-model="act.description" required></td>
+          <td ng-if="act.type == 'visit'" colspan="1">
+            <label for="input_visit_{{day.num}}_{{act.order}}" >Visit:</label>
+          </td>
+          <td ng-if="act.type == 'visit'" colspan="3">
+          	<ui-select id="input_visit_{{day.num}}_{{act.order}}"
+		               ng-model="act.poiRef"
+		    		   theme="bootstrap"    		   
+		    		   title="Choose a place"
+		    		   required
+		    		   >
+		    	<ui-select-match placeholder="Enter a place name ...">{{$select.selected.name || act.placeRef.name}}</ui-select-match>
+		    	<ui-select-choices repeat="ref in act._pois track by $index"
+		    					   refresh="act._poiRefresher($select.search)"
+		    					   refresh-delay="300">
+		    		<div ng-bind-html="ref.name | highlight: $select.search"></div>
+		    	</ui-select-choices>
+		    </ui-select>            
+          </td>          
+          <td ng-if="act.type == 'transport'">                         
+            <label for="input_move_to_{{day.num}}_{{act.order}}">To:</label>
+          </td>          
+          <td ng-if="act.type == 'transport'">          
+            <ui-select id="input_move_to_{{day.num}}_{{act.order}}"
+		               ng-model="act.toCityRef"
+		    		   theme="bootstrap"    		   
+		    		   title="Choose a city"
+		    		   required
+		    		   >
+		    	<ui-select-match placeholder="Enter a city name ...">{{$select.selected.name || act.toCityRef.name}}</ui-select-match>
+		    	<ui-select-choices repeat="ref in act._cities track by $index"
+		    					   refresh="act._cityRefresher($select.search)"
+		    					   refresh-delay="300">
+		    		<div ng-bind-html="ref.name | highlight: $select.search"></div>
+		    	</ui-select-choices>
+		    </ui-select>          
           </td>
           <td ng-if="act.type == 'transport'">
-            <label for="input_move_from_{{day.num}}_{{act.order}}">From:</label>
-            <input id="input_move_from_{{day.num}}_{{act.order}}" type="text" 
-                         ng-model="act.fromCityRef" 
-                         placeholder="Click to choose ..." 
-                         typeahead-editable="false" 
-                         typeahead="city for city in getCity($viewValue)" 
-                         typeahead-input-formatter="$model.name"
-                         typeahead-template-url="refTemplate.html"
-                         class="form-control"/>
-            <label for="input_move_to_{{day.num}}_{{act.order}}">To:</label>
-            <input id="input_move_to_{{day.num}}_{{act.order}}" type="text" 
-                         ng-model="act.toCityRef" 
-                         placeholder="Click to choose ..." 
-                         typeahead-editable="false" 
-                         typeahead="city for city in getCity($viewValue)" 
-                         typeahead-input-formatter="$model.name"
-                         typeahead-template-url="refTemplate.html"
-                         class="form-control"/>
             <label for="input_modality_{{day.num}}_{{act.order}}">By:</label>
-            <select id="input_modality_{{day.num}}_{{act.order}}" ng-model="act.modalityRef.id">
-              <option value="0">by car</option>
-              <option value="1">by plane</option>
+          </td>
+          <td ng-if="act.type == 'transport'">
+            <select id="input_modality_{{day.num}}_{{act.order}}" class="form-control" ng-model="act.modalityRef.id" required>
+                <option value="bus">Bus</option>
+				<option value="air">Airplane</option>
+				<option value="ship">Ship</option>
+				<option value="car">Car</option>
+				<option value="train">Train</option>
             </select>
           </td>
-          <td ng-if="act.type == 'free'">
-            free time
+          <td ng-if="act.type == 'free'" colspan="4">
+            <b>Free time!</b>
           </td>
-          <td>
-                  <button type="button" class="btn" ng-click="removeActivity(day,act);">X</button>
+          <td class="btn-group">
+                  <button type="button" class="btn btn-xs pull-right" ng-click="removeActivity(day,act);"><i class="glyphicon glyphicon-remove"></i></button>
+                  <button ng-if="act._canMoveUp" class="bnt btn-xs pull-right" ng-click="moveActivity(day,act,-1);"><i class="glyphicon glyphicon-chevron-up"></i></button>
+                  <button ng-if="act._canMoveDown" class="bnt btn-xs pull-right" ng-click="moveActivity(day,act,1);"><i class="glyphicon glyphicon-chevron-down"></i></button>
           </td>
         </tr>
         <tfoot>
-                <td colspan="5" class="btn-group">
+        	<tr>
+                <td colspan="8">
                         <button type="button" class="btn" ng-click="addVisit(day)">Add Visit</button>
+                
                         <button type="button" class="btn" ng-click="addMove(day)">Add Move</button>
+                
                         <button type="button" class="btn" ng-click="addFree(day)">Add Free Time</button>
                 </td>
+            <tr>
         </tfoot>
         
       </tbody>
     </table>
     </div>
     <div class="btn-group">
-            <button class="btn" ng-click="addDay(trip)">Add day</button>
+            <button class="btn" ng-click="addDay(trip)">Add day</button>            
     </div>
+    </form>
 </div>
 
-<script>
+<script type="text/javascript">
+
 initialTripEditModel = @Html(Json.toJson(JsonTrip.RepTrip.fromTrip(trip)).toString);
+
 </script>
 
 }

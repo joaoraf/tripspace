@@ -10,6 +10,6 @@ import scala.concurrent.ExecutionContext
  */
 trait SearchService {
   def searchRegionByNamePart(namePart : String)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]]
-  def searchCityByNamePart(namePart : String)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]]
-  def searchPlaceByNamePart(namePart : String)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]]
+  def searchCityByNamePart(regionId : Long, namePart : String)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]]
+  def searchPlaceByNamePart(cityId : Long, namePart : String)(implicit ec : ExecutionContext) : Future[Seq[Ref[FeatureId]]]
 }

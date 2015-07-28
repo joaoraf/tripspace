@@ -16,12 +16,14 @@ trait TripspaceDBTableDefinitions {
       def tripDescription = column[String]("trip_description", O.Default(""))
       def tripIsPublic = column[Boolean]("trip_is_public", O.Default(false))      
       def userId = column[String]("user_id")
-      def regionId = column[Int]("region_id")
+      def regionId = column[Long]("region_id")
+      def cityId = column[Long]("city_id")
       
       lazy val fk_user = foreignKey("fk_trip_user", userId, slickUsers)(_.id, Cascade,Restrict)
       lazy val fk_region = foreignKey("fk_trip_region", regionId, features)(_.id, Cascade,Restrict)
+      lazy val fk_city = foreignKey("fk_trip_city", cityId, features)(_.id, Cascade,Restrict)
       
-      def * = (tripId,tripName,tripDescription,tripIsPublic,userId,regionId) <> (DBTrip.tupled,DBTrip.unapply)
+      def * = (tripId,tripName,tripDescription,tripIsPublic,userId,regionId,cityId) <> (DBTrip.tupled,DBTrip.unapply)
     }
     
     lazy val slickTrips = TableQuery[Trips]
@@ -54,11 +56,12 @@ trait TripspaceDBTableDefinitions {
       def dayNumber = column[Int]("day_number")
       def order = column[Int]("activity_order")
       def lengthHours = column[Int]("length_hours")
+      def description = column[String]("description")
       
       val fk_trip_day = foreignKey("fk_activity_trip_day", (tripId,dayNumber), slickTripDays)(x => (x.tripId, x.dayNumber), Cascade,Cascade)
       val pk = primaryKey("pk_activity", (tripId,dayNumber,order))
       
-      def * = (tripId,dayNumber,order,lengthHours) <> (DBActivity.tupled, DBActivity.unapply)
+      def * = (tripId,dayNumber,order,lengthHours,description) <> (DBActivity.tupled, DBActivity.unapply)
     }
         
     lazy val slickActivities : BaseActivityTableQuery[Activities] = TableQuery[Activities] 
@@ -67,15 +70,14 @@ trait TripspaceDBTableDefinitions {
       def tripId = column[String]("trip_id")
       def dayNumber = column[Int]("day_number")
       def order = column[Int]("activity_order")
-      def visitPOIId = column[Int]("visit_poi_id")
-      def visitDescription = column[String]("visit_description", O.Default(""))      
+      def visitPOIId = column[Long]("visit_poi_id")           
       
       lazy val fk_activity = foreignKey("fk_visit_activity_day", (tripId,dayNumber,order), slickActivities)(x => (x.tripId, x.dayNumber, x.order), Cascade,Cascade)
       lazy val fk_poi = foreignKey("fk_visit_activity_poi", visitPOIId, features)(_.id,Cascade,Cascade)
       
       val pk = primaryKey("pk_visit_activity", (tripId,dayNumber,order))                  
       
-      def * = (tripId,dayNumber,order,visitPOIId,visitDescription) <> (DBVisitActivity.tupled, DBVisitActivity.unapply)
+      def * = (tripId,dayNumber,order,visitPOIId) <> (DBVisitActivity.tupled, DBVisitActivity.unapply)
     }
     
     lazy val slickVisitActivities : BaseActivityTableQuery[VisitActivity] = TableQuery[VisitActivity]
@@ -84,12 +86,10 @@ trait TripspaceDBTableDefinitions {
       def tripId = column[String]("trip_id")
       def dayNumber = column[Int]("day_number")
       def order = column[Int]("activity_order")
-      
-      def fromCityId = column[Int]("from_city_id")
-      def toCityId = column[Int]("to_city_id")
+            
+      def toCityId = column[Long]("to_city_id")
       def transportModalityId = column[String]("transport_modality_id")
-      def transportDescription = column[String]("transport_description", O.Default(""))
-      lazy val fk_from_city = foreignKey("fk_transport_activity_from_city", fromCityId, features)(_.id,Cascade,Cascade)
+      
       lazy val fk_to_city = foreignKey("fk_transport_activity_to_city", toCityId, features)(_.id,Cascade,Cascade)
       lazy val fk_modality = foreignKey("fk_transport_activity_modality", transportModalityId, transportModalities)(_.transportModalityId,Cascade,Cascade)
             
@@ -97,7 +97,7 @@ trait TripspaceDBTableDefinitions {
       
       lazy val pk = primaryKey("pk_transport_activity", (tripId,dayNumber,order))          
       
-      def * = (tripId,dayNumber,order,fromCityId,toCityId,transportModalityId,transportDescription) <> (DBTransportActivity.tupled, DBTransportActivity.unapply)
+      def * = (tripId,dayNumber,order,toCityId,transportModalityId) <> (DBTransportActivity.tupled, DBTransportActivity.unapply)
     }
     
     lazy val slickTransportActivities : BaseActivityTableQuery[TransportActivity] = TableQuery[TransportActivity]            
@@ -113,7 +113,7 @@ trait TripspaceDBTableDefinitions {
     lazy val transportModalities = TableQuery[TransportModalities]
     
     class Features(tag : Tag) extends Table[DBFeature](tag, "feature") {
-      def id = column[Int]("id")
+      def id = column[Long]("id")
       def name = column[String]("name")
       def latitude = column[Double]("latitude")
       def longitude = column[Double]("longitude")
@@ -132,8 +132,8 @@ trait TripspaceDBTableDefinitions {
     lazy val features = TableQuery[Features]
     
     class FeatureHierarchies(tag : Tag) extends Table[DBFeatureHierarchy](tag, "feature_hierarchy") {
-      def botId = column[Int]("bot_id")
-      def topId = column[Int]("top_id")
+      def botId = column[Long]("bot_id")
+      def topId = column[Long]("top_id")
       
       def * = (botId,topId) <> (DBFeatureHierarchy.tupled, DBFeatureHierarchy.unapply)
     }
