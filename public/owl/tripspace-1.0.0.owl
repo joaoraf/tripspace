@@ -73,6 +73,9 @@
     <Declaration>
         <DataProperty IRI="#hasDuration"/>
     </Declaration>
+    <Declaration>
+        <DataProperty IRI="#sequenceNumber"/>
+    </Declaration>
     <SubClassOf>
         <Class IRI="#TspaceTripFreeTime"/>
         <Class IRI="#TspaceTripActivity"/>
@@ -118,12 +121,12 @@
         <ObjectProperty IRI="#refersToFeature"/>
     </SubObjectPropertyOf>
     <InverseObjectProperties>
-        <ObjectProperty IRI="#containedInTrip"/>
         <ObjectProperty IRI="#containsDay"/>
+        <ObjectProperty IRI="#containedInTrip"/>
     </InverseObjectProperties>
     <InverseObjectProperties>
-        <ObjectProperty IRI="#happensAtDay"/>
         <ObjectProperty IRI="#containsActivity"/>
+        <ObjectProperty IRI="#happensAtDay"/>
     </InverseObjectProperties>
     <FunctionalObjectProperty>
         <ObjectProperty IRI="#containedInRegion"/>
@@ -210,6 +213,9 @@
     <FunctionalDataProperty>
         <DataProperty IRI="#hasDuration"/>
     </FunctionalDataProperty>
+    <FunctionalDataProperty>
+        <DataProperty IRI="#sequenceNumber"/>
+    </FunctionalDataProperty>
     <DataPropertyDomain>
         <DataProperty IRI="#hasDuration"/>
         <Class IRI="#TspaceTripActivity"/>
@@ -221,6 +227,10 @@
     <DataPropertyRange>
         <DataProperty IRI="#hasDuration"/>
         <Datatype abbreviatedIRI="xsd:nonNegativeInteger"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#sequenceNumber"/>
+        <Datatype abbreviatedIRI="xsd:positiveInteger"/>
     </DataPropertyRange>
 </Ontology>
 
