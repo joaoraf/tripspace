@@ -20,6 +20,10 @@ POST		/publishTrip/:tripId			 controllers.ApplicationController.publishTrip(trip
 POST		/removeTrip/:tripId			 	 controllers.ApplicationController.removeTrip(tripId)
 GET			/trip/:tripId				 	 controllers.ApplicationController.viewTrip(tripId)
 
+GET			/resource/trip/:tripId			 controllers.ApplicationController.resourceTrip(tripId)
+GET			/resource/day/:tripId/:dayNum	 controllers.ApplicationController.resourceDay(tripId,dayNum : Int)
+GET			/resource/activity/:tripId/:dayNum/:actOrder	 controllers.ApplicationController.resourceActivity(tripId,dayNum : Int, actOrder : Int)
+
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                    controllers.Assets.at(path="/public", file)
 GET         /webjars/*file                   controllers.WebJarAssets.at(file)

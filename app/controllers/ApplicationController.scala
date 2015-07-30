@@ -35,6 +35,8 @@ import models.Trip
 import models.Ref
 import play.api.http.MediaRange
 import models.services.rdf.RdfService
+import play.api.mvc.Request
+
 
 /**
  * The basic application controller.
@@ -51,12 +53,7 @@ class ApplicationController @Inject() (
   extends Silhouette[User, SessionAuthenticator] with Logger {
   
   
-  /**
-   * Handles the index action.
-   *
-   * @return The result to display.
-   */
-  def index = SecuredAction.async { implicit request =>
+  private def tripsForUser(implicit request : SecuredRequest[AnyContent]) = {
     import request.ec
     for {
       trips <- tripService.tripsForUser(request.identity.ref.id)      
@@ -64,6 +61,13 @@ class ApplicationController @Inject() (
       Ok(views.html.index(request.identity,trips))
     }
   }
+  /**
+   * Handles the index action.
+   *
+   * @return The result to display.
+   */
+  def index = SecuredAction.async { implicit request => tripsForUser }
+    
   
   /**
    * Add a new Trip
@@ -155,8 +159,11 @@ class ApplicationController @Inject() (
   
   def publishTrip(tripId : TripId) : Action[AnyContent] = SecuredAction.async { implicit request =>
       import request.ec
-      tripService.publishTrip(tripId,request.identity.userID).flatMap(
-         _ => index(request))    
+      for {
+        _ <- tripService.publishTrip(tripId,request.identity.userID)
+        _ <- rdfService.publishRdf(tripId)        
+        res <- tripsForUser
+      } yield res             
   }
   
   def removeTrip(tripId : String) : Action[AnyContent] = removeTrip(UUID.fromString(tripId))
@@ -205,31 +212,47 @@ class ApplicationController @Inject() (
     env.authenticatorService.discard(request.authenticator, result)
   }
   
-  val rdfMediaRanges = Set[String](
-      "application/rdf+xml", "text/n3",  "test/turtle", 
-      "application/x-turtle", "text/rdf+n3"
-      ).flatMap(MediaRange.parse(_))
   
-  def resourceTrip(tripId : String) = Action.async { implicit request =>
-    if(request.acceptedTypes.exists(rdfMediaRanges)) {
-      Future.successful(
-          Ok(
-              rdfService.serializeTrip(tripId,
-                  request.acceptedTypes.filter(rdfMediaRanges).head
-              )
-          )
-      )
-    } else {
-      Future.successful(UnsupportedMediaType)
-    }    
+  def getRdfMediaRange(request : Request[_]) : Option[MediaRange] =
+    if(request.acceptedTypes.exists(rdfService.acceptedMimeTypes)) {
+        Some(request.acceptedTypes.filter(rdfService.acceptedMimeTypes).head)
+    } else { None }
+      
+  def withRdfMediaRange(request : Request[_])(f : MediaRange => Future[Option[String]]) = {
+      import scala.concurrent.ExecutionContext.Implicits.global
+      println("withRdfMediaRange: " + request.acceptedTypes)
+      getRdfMediaRange(request) match {
+        case Some(mr) =>
+            println("withRdfMediaRange: mr = " + mr)
+            f(mr).map(x => Ok(x.getOrElse("")))
+        case None =>
+          f(MediaRange.parse("text/turtle").head).map(x => Ok(x.getOrElse("")))
+          //Future.successful(UnsupportedMediaType)
+      }
   }
+      
+  def resourceTrip(tripId : String) : Action[AnyContent] = resourceTrip(UUID.fromString(tripId));
   
-  def resourceDay(tripId : String, dayNum : Long) = Action.async { implicit request =>
-    ???
-  }
+  def resourceTrip(tripId : TripId) = Action.async { implicit request =>
+      import scala.concurrent.ExecutionContext.Implicits.global
+      withRdfMediaRange(request) { 
+        mr => rdfService.serializeTrip(tripId,mr) }                           
+    }
   
-  def resourceActivity(tripId : String, dayNim : Long, order : Long) = Action.async { implicit request =>
-    ???
+  def resourceDay(tripId : String, dayNum : Int) : Action[AnyContent] = resourceDay(UUID.fromString(tripId), dayNum)
+  def resourceDay(tripId : TripId, dayNum : Int) : Action[AnyContent] = Action.async { implicit request =>
+    import scala.concurrent.ExecutionContext.Implicits.global
+      println(s"resourceDay: ${tripId}, ${dayNum}")
+      withRdfMediaRange(request) { mr => println(mr) ; rdfService.serializeTripDay(tripId,dayNum,mr) }          
+    }
+  
+  def resourceActivity(tripId : String, dayNum : Int, order : Int) : Action[AnyContent] =
+        resourceActivity(UUID.fromString(tripId), dayNum, order)
+  def resourceActivity(tripId : TripId, dayNum : Int, order : Int) : Action[AnyContent] = 
+    Action.async { implicit request =>
+    println(s"resourceActivity: ${tripId}, ${dayNum}, ${order}")
+    import scala.concurrent.ExecutionContext.Implicits.global
+    withRdfMediaRange(request) { mr => println(mr); rdfService.serializeTripActivity(tripId,dayNum,order,mr) }    
   }
   
   lazy val javascriptRoutes : Action[AnyContent] = Action { implicit request =>

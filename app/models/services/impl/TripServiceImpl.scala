@@ -11,13 +11,15 @@ import forms.TripBaseData
 import models.TripId
 import java.util.UUID
 import models.Ref
+import models.services.rdf.RdfService
 
 /**
 
  * @author joao
  */
 class TripServiceImpl @Inject() (
-    tripDao : TripDAO
+    tripDao : TripDAO,
+    rdfService : RdfService
     ) extends TripService{
     def tripsForUser(id : UserId)(implicit ec : ExecutionContext) : Future[Seq[Trip]] = {
       tripDao.findByUser(id).map(_.values.to[IndexedSeq].sortBy(_.ref.name))
@@ -36,7 +38,7 @@ class TripServiceImpl @Inject() (
       tripDao.save(trip, userId)
     }
     def publishTrip(tripId : TripId,userId : UserId)(implicit ec : ExecutionContext) : Future[Unit] = {
-      tripDao.publish(tripId,userId)
+      tripDao.publish(tripId,userId)      
     }
     def removeTrip(tripId : TripId,userId : UserId)(implicit ec : ExecutionContext) : Future[Unit] = {
       tripDao.remove(tripId,userId)

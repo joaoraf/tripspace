@@ -10,12 +10,12 @@
 
 
 <Ontology xmlns="http://www.w3.org/2002/07/owl#"
-     xml:base="http://tripspace.ngrok.io/assets/owl/tripspace-1.0.0"
+     xml:base="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:xml="http://www.w3.org/XML/1998/namespace"
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-     ontologyIRI="http://tripspace.ngrok.io/assets/owl/tripspace-1.0.0">
+     ontologyIRI="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0">
     <Prefix name="" IRI="http://www.w3.org/2002/07/owl#"/>
     <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
     <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
@@ -75,6 +75,9 @@
     </Declaration>
     <Declaration>
         <DataProperty IRI="#sequenceNumber"/>
+    </Declaration>
+    <Declaration>
+        <DataProperty IRI="#transportModality"/>
     </Declaration>
     <SubClassOf>
         <Class IRI="#TspaceTripFreeTime"/>
@@ -216,9 +219,16 @@
     <FunctionalDataProperty>
         <DataProperty IRI="#sequenceNumber"/>
     </FunctionalDataProperty>
+    <FunctionalDataProperty>
+        <DataProperty IRI="#transportModality"/>
+    </FunctionalDataProperty>
     <DataPropertyDomain>
         <DataProperty IRI="#hasDuration"/>
         <Class IRI="#TspaceTripActivity"/>
+    </DataPropertyDomain>
+    <DataPropertyDomain>
+        <DataProperty IRI="#transportModality"/>
+        <Class IRI="#TspaceTripTransport"/>
     </DataPropertyDomain>
     <DataPropertyRange>
         <DataProperty IRI="#hasDescription"/>
@@ -231,6 +241,17 @@
     <DataPropertyRange>
         <DataProperty IRI="#sequenceNumber"/>
         <Datatype abbreviatedIRI="xsd:positiveInteger"/>
+    </DataPropertyRange>
+    <DataPropertyRange>
+        <DataProperty IRI="#transportModality"/>
+        <DataOneOf>
+            <Literal datatypeIRI="&rdf;PlainLiteral">air</Literal>
+            <Literal datatypeIRI="&rdf;PlainLiteral">bus</Literal>
+            <Literal datatypeIRI="&rdf;PlainLiteral">car</Literal>
+            <Literal datatypeIRI="&rdf;PlainLiteral">foot</Literal>
+            <Literal datatypeIRI="&rdf;PlainLiteral">ship</Literal>
+            <Literal datatypeIRI="&rdf;PlainLiteral">train</Literal>
+        </DataOneOf>
     </DataPropertyRange>
 </Ontology>
 

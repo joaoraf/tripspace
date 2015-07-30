@@ -9,6 +9,13 @@ object RdfSerialization {
 
   
   def serialize(trip : Trip) : String = {
+    
+    val days = trip.days.to[Seq].map {
+      case (dayPos,day) =>
+        s"""
+                ts:containsDay ${trip.ref.id}_${dayPos} ;
+"""
+    }
     s"""
 :${trip.ref.id} a ts:TspaceTrip ;
                 ts:containedInRegion ${gn(trip.regionRef.id)} ;

@@ -1,0 +1,303 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+]>
+
+
+<rdf:RDF xmlns="http://www.w3.org/2002/07/owl#"
+     xml:base="http://www.w3.org/2002/07/owl"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+    <Ontology rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0">
+        <imports rdf:resource="http://www.geonames.org/ontology"/>
+    </Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containedInRegion -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containedInRegion">
+        <rdf:type rdf:resource="&owl;AsymmetricProperty"/>
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdf:type rdf:resource="&owl;IrreflexiveProperty"/>
+        <rdfs:domain rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTrip"/>
+        <rdfs:subPropertyOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#refersToFeature"/>
+    </ObjectProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containedInTrip -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containedInTrip"/>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containsActivity -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containsActivity">
+        <rdf:type rdf:resource="&owl;AsymmetricProperty"/>
+        <rdf:type rdf:resource="&owl;IrreflexiveProperty"/>
+        <rdfs:range rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripActivity"/>
+        <rdfs:domain rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripDay"/>
+        <inverseOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#happensAtDay"/>
+    </ObjectProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containsDay -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containsDay">
+        <rdf:type rdf:resource="&owl;AsymmetricProperty"/>
+        <rdf:type rdf:resource="&owl;IrreflexiveProperty"/>
+        <rdfs:domain rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTrip"/>
+        <rdfs:range rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripDay"/>
+        <inverseOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#containedInTrip"/>
+    </ObjectProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#endsInCity -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#endsInCity">
+        <rdf:type rdf:resource="&owl;AsymmetricProperty"/>
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdf:type rdf:resource="&owl;IrreflexiveProperty"/>
+        <rdfs:subPropertyOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#refersToFeature"/>
+    </ObjectProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#happensAtDay -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#happensAtDay"/>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#refersToFeature -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#refersToFeature">
+        <rdf:type rdf:resource="&owl;AsymmetricProperty"/>
+        <rdf:type rdf:resource="&owl;IrreflexiveProperty"/>
+        <rdfs:range rdf:resource="http://geovocab.org/spatial#Feature"/>
+    </ObjectProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#startsInCity -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#startsInCity">
+        <rdf:type rdf:resource="&owl;AsymmetricProperty"/>
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdf:type rdf:resource="&owl;IrreflexiveProperty"/>
+        <rdfs:subPropertyOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#refersToFeature"/>
+    </ObjectProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#visitsPlace -->
+
+    <ObjectProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#visitsPlace">
+        <rdf:type rdf:resource="&owl;AsymmetricProperty"/>
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdf:type rdf:resource="&owl;IrreflexiveProperty"/>
+        <rdfs:domain rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripVisit"/>
+        <rdfs:subPropertyOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#refersToFeature"/>
+    </ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#hasDescription -->
+
+    <DatatypeProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#hasDescription">
+        <rdfs:range rdf:resource="&xsd;string"/>
+    </DatatypeProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#hasDuration -->
+
+    <DatatypeProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#hasDuration">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:domain rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripActivity"/>
+        <rdfs:range rdf:resource="&xsd;nonNegativeInteger"/>
+    </DatatypeProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#sequenceNumber -->
+
+    <DatatypeProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#sequenceNumber">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:range rdf:resource="&xsd;positiveInteger"/>
+    </DatatypeProperty>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#transportModality -->
+
+    <DatatypeProperty rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#transportModality">
+        <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+        <rdfs:domain rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripTransport"/>
+        <rdfs:range>
+            <rdfs:Datatype>
+                <oneOf>
+                    <rdf:Description>
+                        <rdf:type rdf:resource="&rdf;List"/>
+                        <rdf:first>air</rdf:first>
+                        <rdf:rest>
+                            <rdf:Description>
+                                <rdf:type rdf:resource="&rdf;List"/>
+                                <rdf:first>bus</rdf:first>
+                                <rdf:rest>
+                                    <rdf:Description>
+                                        <rdf:type rdf:resource="&rdf;List"/>
+                                        <rdf:first>car</rdf:first>
+                                        <rdf:rest>
+                                            <rdf:Description>
+                                                <rdf:type rdf:resource="&rdf;List"/>
+                                                <rdf:first>foot</rdf:first>
+                                                <rdf:rest>
+                                                    <rdf:Description>
+                                                        <rdf:type rdf:resource="&rdf;List"/>
+                                                        <rdf:first>ship</rdf:first>
+                                                        <rdf:rest>
+                                                            <rdf:Description>
+                                                                <rdf:type rdf:resource="&rdf;List"/>
+                                                                <rdf:first>train</rdf:first>
+                                                                <rdf:rest rdf:resource="&rdf;nil"/>
+                                                            </rdf:Description>
+                                                        </rdf:rest>
+                                                    </rdf:Description>
+                                                </rdf:rest>
+                                            </rdf:Description>
+                                        </rdf:rest>
+                                    </rdf:Description>
+                                </rdf:rest>
+                            </rdf:Description>
+                        </rdf:rest>
+                    </rdf:Description>
+                </oneOf>
+            </rdfs:Datatype>
+        </rdfs:range>
+    </DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTrip -->
+
+    <Class rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTrip"/>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripActivity -->
+
+    <Class rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripActivity">
+        <disjointUnionOf rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripFreeTime"/>
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripTransport"/>
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripVisit"/>
+        </disjointUnionOf>
+    </Class>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripDay -->
+
+    <Class rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripDay"/>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripFreeTime -->
+
+    <Class rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripFreeTime">
+        <rdfs:subClassOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripActivity"/>
+    </Class>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripTransport -->
+
+    <Class rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripTransport">
+        <rdfs:subClassOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripActivity"/>
+    </Class>
+    
+
+
+    <!-- https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripVisit -->
+
+    <Class rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripVisit">
+        <rdfs:subClassOf rdf:resource="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripActivity"/>
+    </Class>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // General axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description>
+        <rdf:type rdf:resource="&owl;AllDisjointClasses"/>
+        <members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripFreeTime"/>
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripTransport"/>
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripVisit"/>
+        </members>
+    </rdf:Description>
+    <rdf:Description>
+        <rdf:type rdf:resource="&owl;AllDisjointClasses"/>
+        <members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTrip"/>
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripActivity"/>
+            <rdf:Description rdf:about="https://tripspace.ngrok.io/assets/owl/tripspace-1.0.0#TspaceTripDay"/>
+        </members>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 3.5.1) http://owlapi.sourceforge.net -->
+
